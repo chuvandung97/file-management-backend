@@ -3,7 +3,7 @@ var router = express.Router();
 var Multer = require("multer");
 var minioClient = require('../config/minio');
 
-router.post("/upload", Multer({dest: "./uploads/"}).single("file"), function(request, response) {
+router.post('/', Multer({dest: "./uploads/"}).single("file"), function(request, response) {
     console.log(request.file.originalname)
     console.log(request.file.path)
     var metaData = {
@@ -16,3 +16,5 @@ router.post("/upload", Multer({dest: "./uploads/"}).single("file"), function(req
         response.send(request.file);
     });
 });
+
+module.exports = router;
