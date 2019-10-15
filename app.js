@@ -12,10 +12,12 @@ var downloadFileRouter = require('./routes/downloadFile');
 var registerRouter = require('./routes/register');
 var loginRouter = require('./routes/login')
 
+const {exec} = require('child_process')
 var app = express();
 
 app.use(cors())
 app.use(bodyParser.json())
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -31,7 +33,7 @@ app.use('/upload', uploadFileRouter);
 app.use('/download', downloadFileRouter);
 app.use('/register', registerRouter);
 app.use('/login', loginRouter);
-
+console.log(123)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
