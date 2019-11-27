@@ -43,12 +43,12 @@ router.post('/add', async function(req, res, next) {
     }
 })
 
-router.delete('/update/:roleId', async function(req, res, next) {
+router.post('/update/:roleId', async function(req, res, next) {
     try {
         var checkRole = await models.Role.findOne({ where: {id: req.params.roleId} })
         if(checkRole) {
             models.sequelize.transaction(t => {
-                return checkRole.delete({
+                return checkRole.update({
                     code: req.body.code,
                     name: req.body.name,
                     description: req.body.description
@@ -67,7 +67,19 @@ router.delete('/update/:roleId', async function(req, res, next) {
 })
 
 router.delete('/delete', function(req, res, next) {
-
+    try {
+        models.sequelize.transaction(t => {
+            return models.Role.destroy({ 
+                where: {id: req.query.roleIds },
+            }, {transaction: t})
+        }).then(affectedRows => {
+            return res.status(200).json({code: 200, message: "Xoá thành công ", count: affectedRows})
+        }).catch(err => {
+            return res.status(500).json({code: 500, message: "Xóa thất bại !", body: {err}})
+        })
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Xóa thất bại !", body: {error}})
+    }
 })
 
 
