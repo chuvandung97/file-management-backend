@@ -12,6 +12,10 @@ module.exports = (sequelize, DataTypes) => {
     User.hasMany(models.UserToken, {
       foreignKey: 'user_id',
       as: 'userDetails'
+    }),
+    User.belongsTo(models.Storage, {
+      foreignKey: 'storage_id',
+      as: 'storageDetail',
     })
   };
   return User;

@@ -7,13 +7,14 @@ router.post('/', Multer({dest: "./uploads/"}).single("file"), function(request, 
     console.log(request.file.originalname)
     console.log(request.file.path)
     var metaData = {
-      'Content-Type': 'images/png',
+      'Content-Type': 'images/*',
     }
-    minioClient.fPutObject("000aab", request.file.originalname, request.file.path, metaData, function(error, etag) {
+    minioClient.fPutObject("test2", request.file.originalname, request.file.path, metaData, function(error, etag) {
         if(error) {
             return console.log(error);
         }
         response.send(request.file);
+        
     });
 });
 

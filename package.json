@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "minio": "minio server --address localhost:9000 D:\\MINIO-SERVER"
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
@@ -13,6 +14,7 @@
     "cors": "^2.8.5",
     "debug": "~2.6.9",
     "express": "~4.16.1",
+    "express-bearer-token": "^2.4.0",
     "express-validator": "^6.2.0",
     "http-errors": "^1.6.3",
     "jade": "~1.11.0",
@@ -23,6 +25,7 @@
     "mysql2": "^1.7.0",
     "nodemon": "^1.19.3",
     "sequelize": "^5.19.6",
-    "sequelize-cli": "^5.5.1"
+    "sequelize-cli": "^5.5.1",
+    "shelljs": "^0.8.3"
   }
 }

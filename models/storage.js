@@ -8,6 +8,9 @@ module.exports = (sequelize, DataTypes) => {
   }, {});
   Storage.associate = function(models) {
     // associations can be defined here
+    Storage.hasMany(models.User, {
+      foreignKey: 'storage_id',
+    })
   };
   return Storage;
 };

@@ -1,3 +1,4 @@
 /node_modules
 /config/minio.js
 /config/config.json
+mc.exe

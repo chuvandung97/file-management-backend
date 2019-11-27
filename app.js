@@ -5,18 +5,21 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var bodyParser = require('body-parser')
 var cors = require('cors')
+const bearerToken = require('express-bearer-token');
 
 var indexRouter = require('./routes/index');
 var uploadFileRouter = require('./routes/uploadFile');
 var downloadFileRouter = require('./routes/downloadFile');
 var registerRouter = require('./routes/register');
 var loginRouter = require('./routes/login')
+var logoutRouter = require('./routes/logout')
+var userRouter = require('./routes/user')
 
-const {exec} = require('child_process')
 var app = express();
 
 app.use(cors())
 app.use(bodyParser.json())
+app.use(bearerToken());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -33,7 +36,8 @@ app.use('/upload', uploadFileRouter);
 app.use('/download', downloadFileRouter);
 app.use('/register', registerRouter);
 app.use('/login', loginRouter);
-console.log(123)
+app.use('/logout', logoutRouter);
+app.use('/users', userRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

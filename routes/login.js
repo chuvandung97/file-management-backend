@@ -9,6 +9,8 @@ var privateKey = fs.readFileSync(path.resolve(__dirname, "../keys/private.pem"),
 var publicKey = fs.readFileSync(path.resolve(__dirname, "../keys/public.pem"), 'utf8');
 var models = require('../models')
 var minioClient = require('../config/minio');
+var shell = require('shelljs')
+var cmdMinio = require('../cmd-minio')
 
 router.post('/', [
     check('email').isEmail(),
@@ -25,7 +27,7 @@ router.post('/', [
         models.User.findOne({where: {email: email}, include: [{model: models.UserToken, as: 'userDetails'}]})
             .then( async (result) => {
                 if(!result) {
-                    res.status(500).json({code: 500, message: "Email don't exists"})
+                    return res.status(500).json({code: 500, message: "Email don't exists"})
                 } else {       
                     var data = result.dataValues
                     var user_token_detail = data.userDetails.length > 0 ? (data.userDetails)[0] : data.userDetails
@@ -53,31 +55,31 @@ router.post('/', [
                                 if(err) {
                                     switch (err.name) {
                                         case "JsonWebTokenError":
-                                            res.status(500).json({code: 500, message: "Invalid refresh token", body: {err}})
+                                            return res.status(500).json({code: 500, message: "Invalid refresh token", body: {err}})
                                             break;
                                         case "TokenExpiredError":
                                             models.sequelize.transaction(t => {
                                                 return user_token_detail.update({token: token, refresh_token: refreshToken, invoked: false}, {transaction: t})
                                                     .then(() => {
-                                                        res.status(200).json({code: 200, message: "Success", body: {token: token, refresh_token: refreshToken}})
+                                                        return res.status(200).json({code: 200, message: "Success", body: {token: token, refresh_token: refreshToken}})
                                                     })
                                                     .catch((err2) => {
-                                                        res.status(500).json({code: 500, message: "Update token fail", body: {err2}})
+                                                        return res.status(500).json({code: 500, message: "Update token fail", body: {err2}})
                                                     })
                                             })
                                             break
                                         default:
-                                            res.status(500).json({code: 500, message: "Error", body: {err}})
+                                            return res.status(500).json({code: 500, message: "Error", body: {err}})
                                             break      
                                     }
                                 } else {
                                     models.sequelize.transaction(t => {
                                         return user_token_detail.update({token: token, invoked: false}, {transaction: t})
                                             .then(() => {
-                                                res.status(200).json({code: 200, message: "Success", body: {token: token}})
+                                                return res.status(200).json({code: 200, message: "Success", body: {token: token}})
                                             })
                                             .catch((err1) => {
-                                                res.status(500).json({code: 500, message: "Update token fail", body: {err1}})
+                                                return res.status(500).json({code: 500, message: "Update token fail", body: {err1}})
                                             })
                                     })
                                 }
@@ -92,24 +94,32 @@ router.post('/', [
                                 }, {transaction: t})
                                 .then(() => {
                                     return models.Storage.create({
-                                        
+                                        name: data.id,
+                                    }, {transaction: t})
+                                    .then((storage) => {
+                                        return result.update({storage_id: storage.id}, {transaction: t})
                                     })
-                                    res.status(200).json({ code: 200, message: "Success", body: { token: token, refreshToken: refreshToken} });
+                                    /* shell.exec(cmdMinio.createPolicy('local'))
+                                    shell.exec(cmdMinio.createUser('local', data.email, data.password))
+                                    shell.exec(cmdMinio.setUserPolicy('local', data.email)) */
                                 })
-                                .catch((err3) => {
-                                    res.status(500).json({ code: 500, message: "Login failed. Can not create UserToken", body: {err3} });
+                            }).then(() => {
+                                minioClient.makeBucket('aaaaaaaaa1', 'us-east-1', (err) => {
+                                    if(err) return res.status(500).json({ code: 500, message: err})
+                                    return res.status(200).json({ code: 200, message: "Success", body: { token: token, refreshToken: refreshToken} });
                                 })
+                            }).catch((err3) => {
+                                return res.status(500).json({ code: 500, message: "Login failed. Can not create UserToken", body: {err3} });
                             })
-    
                         }
                     } else {
-                        res.status(500).json({code: 500, message: "Passwords don't match"})
+                        return res.status(500).json({code: 500, message: "Passwords don't match"})
                     }
                 }
             })
         }
         catch (err4) {
-            res.status(500).json({code: 500, message: "Server error", body: {err4} });
+            return res.status(500).json({code: 500, message: "Server error", body: {err4} });
         }
     });
 

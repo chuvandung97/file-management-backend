@@ -30,21 +30,21 @@ router.post('/', [
                 transaction: t})
             .spread((user, created) => {
                 if(!user) {
-                    res.status(500).json({ code: 500, message: "Register failed. Can not create User"});
+                    return res.status(500).json({ code: 500, message: "Register failed. Can not create User"});
                 }
                 if(!created) {
-                    res.status(500).json({code: 500, message: 'Email is already used'})
+                    return res.status(409).json({code: 409, message: 'Email is already used'})
                 } else {
-                    res.status(200).json({code: 200, message: 'Success'})
+                    return res.status(200).json({code: 200, message: 'Success'})
                 }
             })
             .catch((err2) => {
-                res.status(500).json({ code: 500, message: "Register failed. Can not create User", body: {err2} });
+                return res.status(500).json({ code: 500, message: "Register failed. Can not create User", body: {err2} });
             })
         })
     }
     catch (err3) {
-        res.status(500).json({code: 500, message: "Server error", body: {err3} });
+        return res.status(500).json({code: 500, message: "Server error", body: {err3} });
     }
 });
 
