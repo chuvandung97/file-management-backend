@@ -13,9 +13,11 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'user_id',
       as: 'userDetails'
     }),
-    User.belongsTo(models.Storage, {
+    User.belongsTo(models.storage, {
       foreignKey: 'storage_id',
-      as: 'storageDetail',
+    })
+    User.belongsTo(models.role, {
+      foreignKey: 'role_id',
     })
   };
   return User;

@@ -94,7 +94,7 @@ router.post('/', [
                                 }, {transaction: t})
                                 .then(() => {
                                     return models.Storage.create({
-                                        name: data.id,
+                                        name: data.email,
                                     }, {transaction: t})
                                     .then((storage) => {
                                         return result.update({storage_id: storage.id}, {transaction: t})
@@ -104,10 +104,11 @@ router.post('/', [
                                     shell.exec(cmdMinio.setUserPolicy('local', data.email)) */
                                 })
                             }).then(() => {
-                                minioClient.makeBucket('aaaaaaaaa1', 'us-east-1', (err) => {
+                                /* minioClient.makeBucket('aaaaaaaaa1', 'us-east-1', (err) => {
                                     if(err) return res.status(500).json({ code: 500, message: err})
                                     return res.status(200).json({ code: 200, message: "Success", body: { token: token, refreshToken: refreshToken} });
-                                })
+                                }) */
+                                return res.status(200).json({ code: 200, message: "Success", body: { token: token, refreshToken: refreshToken} });
                             }).catch((err3) => {
                                 return res.status(500).json({ code: 500, message: "Login failed. Can not create UserToken", body: {err3} });
                             })

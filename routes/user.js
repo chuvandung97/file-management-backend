@@ -3,14 +3,17 @@ var router = express.Router();
 var models = require('../models')
 var bcrypt = require('bcrypt');
 
+//lấy danh sách tất cả user
 router.get('/lists', async function(req, res, next) {
     if(!req.token) {
         return res.status(401).json({code: 401, message: "Unauthorized"})
     } else {
         var userList = await models.User.findAll({
+            attributes: { exclude: ['password'] },
             order: [
                 ['name', 'ASC']
             ], 
+            include: [ models.role ]
         })
         if(!userList) {
             return res.status(404).json({code: 404, message: "Not found user"})
@@ -20,6 +23,73 @@ router.get('/lists', async function(req, res, next) {
     }
 })
 
+//lấy danh sách tất cả user mà có role là 'Group'
+router.get('/lists/rolegroup', async function(req, res, next) {
+    try {
+        var codeId = await models.role.findOne({ 
+            attributes: ['id'],
+            where: {code: 'Group'}
+        })
+        if(!codeId) {
+            return res.status(404).json({code: 404, message: "Vai trò 'Group' không tồn tại"})
+        }
+        var userList = await models.User.findAll({
+            attributes: { exclude: ['password'] },
+            where: {role_id : codeId.dataValues.id, storage_id: null},
+            order: [
+                ['name', 'ASC']
+            ], 
+        })
+        return res.status(200).json({code: 200, message: "Success", body: {user_list: userList}})
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server"})
+    }
+})
+
+//thêm user vào group
+router.post('/add/togroup', async function(req, res, next) {
+    try {
+        var storageId = await models.group.findOne({
+            attributes: ['storage_id'],
+            where: {id: req.body.groupId}
+        })
+        if(!storageId) {
+            return res.status(404).json({code: 404, message: "Kho không tồn tại"})
+        }
+        models.sequelize.transaction(t => {
+            return models.User.update(
+                { storage_id: storageId.dataValues.storage_id },
+                { where: {id: req.body.userIds} }, 
+                {transaction: t})
+        }).then(() => {
+            return res.status(200).json({code: 200, message: "Thêm mới thành công !"})
+        }).catch(err => {
+            return res.status(500).json({code: 500, message: "Thêm mới thất bại !", body: {err}})
+        })
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
+//xóa người dùng khỏi group
+router.post('/remove/fromgroup', async function(req, res, next) {
+    try {
+        models.sequelize.transaction(t => {
+            return models.User.update(
+                { storage_id: null },
+                { where: {id: req.body.userIds} }, 
+                {transaction: t})
+        }).then((affectedCount) => {
+            return res.status(200).json({code: 200, message: "Xóa thành công ", count: affectedCount})
+        }).catch(err => {
+            return res.status(500).json({code: 500, message: "Xóa thất bại !", body: {err}})
+        })
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
+//tạo mới 1 user
 router.post('/add', async function(req, res, next) {
     try {
         var email = req.body.email
@@ -29,15 +99,68 @@ router.post('/add', async function(req, res, next) {
         } else {
             var password = await bcrypt.hash(req.body.password, 10)
             models.sequelize.transaction(t => {
-                models.User.create({
+                return models.User.create({
                     name: req.body.name,
                     email: email,
+                    role_id: req.body.role_id,
+                    active: req.body.active,
                     password: password
                 }, {transaction: t})
+            }).then(() => {
+                return res.status(200).json({code: 200, message: "Thêm mới thành công !"})
+            }).catch(err => {
+                return res.status(500).json({code: 500, message: "Thêm mới thất bại !", body: {err}})
             })
         }
     } catch(e) {
         return res.status(500).json({code: 500, message: "Lỗi", body: {e}})
+    } 
+})
+
+//cập nhật 1 user
+router.post('/update/:userId', async function(req, res, next) {
+    try {
+        var checkUser = await models.User.findOne({ where: {id: req.params.userId} })
+        if(checkUser) {
+            var info = {
+                name: req.body.name,
+                email: req.body.email,
+                role_id: req.body.role_id,
+                active: req.body.active
+            }
+            if(req.body.password) {
+                var password = await bcrypt.hash(req.body.password, 10)
+                info['password'] = password
+            }
+            models.sequelize.transaction(t => {
+                return checkUser.update(info, {transaction: t})
+            }).then(() => {
+                return res.status(200).json({code: 200, message: "Cập nhật thành công !"})
+            }).catch(err => {
+                return res.status(500).json({code: 500, message: "Cập nhật thất bại !", body: {err}})
+            })
+        } else {
+            return res.status(404).json({code: 404, message: "Không tồn tại người dùng !"})
+        }
+    } catch(e) {
+        return res.status(500).json({code: 500, message: "Cập nhật thất bại !", body: {e}})
+    }
+})
+
+//xóa 1 hoặc nhiều user
+router.delete('/delete', function(req, res, next) {
+    try {
+        models.sequelize.transaction(t => {
+            return models.User.destroy({ 
+                where: {id: req.query.userIds },
+            }, {transaction: t})
+        }).then(affectedRows => {
+            return res.status(200).json({code: 200, message: "Xoá thành công ", count: affectedRows})
+        }).catch(err => {
+            return res.status(500).json({code: 500, message: "Xóa thất bại !", body: {err}})
+        })
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Xóa thất bại !", body: {error}})
     }
 })
 
