@@ -38,7 +38,7 @@ router.get('/me', function(req, res, next) {
                                     id: result.id,
                                     name: result.name,
                                     email: result.email,
-                                    role_id: result.role_id,
+                                    role: result.role,
                                     password: result.password
                                 }
                             })

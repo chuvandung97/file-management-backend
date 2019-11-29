@@ -24,7 +24,7 @@ router.post('/', [
     }
     try {
         var email = req.body.email
-        models.User.findOne({where: {email: email}, include: [{model: models.UserToken, as: 'userDetails'}]})
+        models.User.findOne({where: {email: email}, include: [{model: models.UserToken, as: 'userDetails'}, {model: models.role}]})
             .then( async (result) => {
                 if(!result) {
                     return res.status(500).json({code: 500, message: "Email don't exists"})
@@ -37,7 +37,7 @@ router.post('/', [
                             id: data.id,
                             name: data.name,
                             email:data.email,
-                            role_id: data.role_id,
+                            role: data.role.dataValues.code,
                             password: data.password
                         };
                         const tokenOptions = {
