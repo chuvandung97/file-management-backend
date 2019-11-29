@@ -37,6 +37,7 @@ router.post('/', [
                             id: data.id,
                             name: data.name,
                             email:data.email,
+                            role_id: data.role_id,
                             password: data.password
                         };
                         const tokenOptions = {
@@ -93,7 +94,7 @@ router.post('/', [
                                     invoked: false,
                                 }, {transaction: t})
                                 .then(() => {
-                                    return models.Storage.create({
+                                    return models.storage.create({
                                         name: data.email,
                                     }, {transaction: t})
                                     .then((storage) => {

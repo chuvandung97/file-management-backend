@@ -16,32 +16,40 @@ router.post('/', [
         return res.status(422).json({code: 422, message: "Invalid data", body: {errors} });
     }
     try {
-        var name = req.body.name
-        var email = req.body.email
-        var password = await bcrypt.hash(req.body.password, 10)
-        var User = models.User
-        models.sequelize.transaction(t => {
-            return User.findOrCreate({ 
-                where: {email: email},
-                defaults: {
-                    name: name,
-                    password: password,
-                },
-                transaction: t})
-            .spread((user, created) => {
-                if(!user) {
-                    return res.status(500).json({ code: 500, message: "Register failed. Can not create User"});
-                }
-                if(!created) {
-                    return res.status(409).json({code: 409, message: 'Email is already used'})
-                } else {
-                    return res.status(200).json({code: 200, message: 'Success'})
-                }
-            })
-            .catch((err2) => {
-                return res.status(500).json({ code: 500, message: "Register failed. Can not create User", body: {err2} });
-            })
+        let roleId = await models.role.findOne({
+            attributes: ['id'],
+            where: { code: 'User' }
         })
+        if(!roleId) {
+            return res.status(404).json({code: 404, message: "Vai trò không tồn tại"});
+        } else {
+            var name = req.body.name
+            var email = req.body.email
+            var password = await bcrypt.hash(req.body.password, 10)
+            models.sequelize.transaction(t => {
+                return models.User.findOrCreate({ 
+                    where: {email: email},
+                    defaults: {
+                        name: name,
+                        role_id: roleId.dataValues.id,
+                        password: password,
+                    },
+                    transaction: t})
+                .spread((user, created) => {
+                    if(!user) {
+                        return res.status(500).json({ code: 500, message: "Register failed. Can not create User"});
+                    }
+                    if(!created) {
+                        return res.status(409).json({code: 409, message: 'Email is already used'})
+                    } else {
+                        return res.status(200).json({code: 200, message: 'Success'})
+                    }
+                })
+                .catch((err2) => {
+                    return res.status(500).json({ code: 500, message: "Register failed. Can not create User", body: {err2} });
+                })
+            })
+        }
     }
     catch (err3) {
         return res.status(500).json({code: 500, message: "Server error", body: {err3} });

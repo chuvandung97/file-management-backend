@@ -23,6 +23,24 @@ router.get('/lists', async function(req, res, next) {
     }
 })
 
+//lấy thông tin 1 người dùng theo id
+router.get('/info', async function(req, res, next) {
+    try {
+        var userInfo = await models.User.findOne({
+            attributes: { exclude: ['password'] },
+            include: [models.role],
+            where: {id: req.query.id}
+        }) 
+        if(!userInfo) {
+            return res.status(404).json({code: 404, message: "Người dùng không tồn tại !"})
+        } else {
+            return res.status(200).json({code: 200, message: "Success", body: {user_info: userInfo}})           
+        }
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
 //lấy danh sách tất cả user mà có role là 'Group'
 router.get('/lists/rolegroup', async function(req, res, next) {
     try {
