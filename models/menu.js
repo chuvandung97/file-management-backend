@@ -9,7 +9,20 @@ module.exports = (sequelize, DataTypes) => {
     order: DataTypes.INTEGER
   }, {});
   Menu.associate = function(models) {
-    
+    Menu.hasMany(models.menu, {
+      as: 'childMenu',
+      foreignKey: 'parent_id',
+    })
+
+    Menu.belongsTo(models.menu, {
+      as: 'parentMenu',
+      foreignKey: 'parent_id',
+    })
+
+    Menu.belongsToMany(models.role, {
+      through: models.rolemenu,
+      foreignKey: 'menu_id'
+    })
   };
   return Menu;
 };

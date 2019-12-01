@@ -12,6 +12,11 @@ module.exports = (sequelize, DataTypes) => {
     Role.hasMany(models.User, {
       foreignKey: 'role_id',
     })
+
+    Role.belongsToMany(models.menu, {
+      through: models.rolemenu,
+      foreignKey: 'role_id'
+    })
   };
   return Role;
 };

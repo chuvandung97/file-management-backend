@@ -45,17 +45,14 @@ router.post('/add', async function(req, res, next) {
             models.sequelize.transaction(t => {
                 return models.group.create({
                     name: name,
-                    description: req.body.description
+                    description: req.body.description,
+                    storage: {
+                        name: name,
+                        active: true,
+                    }
+                }, {
+                    include: [ models.storage ] 
                 }, {transaction: t})
-                .then((group) => {
-                    return models.storage.create({
-                        name: group.name,
-                        active: true
-                    }, {transaction: t})
-                    .then((storage) => {
-                        return group.update({storage_id: storage.id}, {transaction: t})
-                    })
-                })
             }).then(() => {
                 return res.status(200).json({code: 200, message: "Thêm mới thành công !"})
             }).catch(error => {
