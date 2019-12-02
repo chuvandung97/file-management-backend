@@ -3,18 +3,16 @@ var router = express.Router();
 var Multer = require("multer");
 var minioClient = require('../config/minio');
 
-router.post('/', Multer({dest: "./uploads/"}).single("file"), function(request, response) {
-    console.log(request.file.originalname)
-    console.log(request.file.path)
+router.post('/', Multer({dest: "./uploads/"}).single("file"), function(req, res) {
     var metaData = {
-      'Content-Type': 'images/*',
-    }
-    minioClient.fPutObject("test2", request.file.originalname, request.file.path, metaData, function(error, etag) {
+        'Content-Type': 'multipart/form-data',
+    } 
+    minioClient.fPutObject(req.query.bucket_name, req.file.originalname, req.file.path, metaData, function(error, etag) {
         if(error) {
-            return console.log(error);
+            return res.status(500).json({ code: 500, message: "Tải lên thất bại !", body: {error} });
         }
-        response.send(request.file);
-        
+        //res.send(req.file);
+        return res.status(200).json({ code: 200, message: "Tải lên thành công !"});
     });
 });
 

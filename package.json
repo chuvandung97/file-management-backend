@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "minio": "minio server --address localhost:9000 D:\\MINIO-SERVER"
+    "minio": "minio server --address localhost:9000 D:\\MinIO"
   },
   "dependencies": {
     "bcrypt": "^3.0.6",
