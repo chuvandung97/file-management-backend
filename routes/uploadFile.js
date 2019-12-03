@@ -5,7 +5,7 @@ var minioClient = require('../config/minio');
 
 router.post('/', Multer({dest: "./uploads/"}).single("file"), function(req, res) {
     var metaData = {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'image/*, audio/*, application/*, font/*, text/*, video/*',
     } 
     minioClient.fPutObject(req.query.bucket_name, req.file.originalname, req.file.path, metaData, function(error, etag) {
         if(error) {

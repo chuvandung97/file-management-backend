@@ -25,7 +25,7 @@ router.post('/', [
     }
     try {
         var email = req.body.email
-        models.User.findOne({where: {email: email}, include: [{model: models.UserToken, as: 'userDetails'}, {model: models.role}]})
+        models.User.findOne({where: {email: email}, include: [{model: models.UserToken, as: 'userDetails'}, {model: models.role}, {model: models.storage}]})
             .then( async (result) => {
                 if(!result) {
                     return res.status(500).json({code: 500, message: "Email don't exists"})
@@ -78,7 +78,7 @@ router.post('/', [
                                     models.sequelize.transaction(t => {
                                         return user_token_detail.update({token: token, invoked: false}, {transaction: t})
                                             .then(() => {
-                                                return res.status(200).json({code: 200, message: "Success", body: {token: token}})
+                                                return res.status(200).json({code: 200, message: "Success", body: {token: token, bucket: {id: data.storage.dataValues.id, name: data.storage.dataValues.name} }})
                                             })
                                             .catch((err1) => {
                                                 return res.status(500).json({code: 500, message: "Update token fail", body: {err1}})
@@ -110,7 +110,7 @@ router.post('/', [
                                     })
                                 })
                             }).then(() => {
-                                return res.status(200).json({ code: 200, message: "Success", body: { token: token, refreshToken: refreshToken, bucket: nameBucket } });
+                                return res.status(200).json({ code: 200, message: "Success", body: { token: token, refreshToken: refreshToken, bucket: {id: storage.id, name: nameBucket} } });
                             }).catch((err3) => {
                                 return res.status(500).json({ code: 500, message: "Login failed.", body: {err3} });
                             })

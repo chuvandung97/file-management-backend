@@ -17,6 +17,7 @@ var userRouter = require('./routes/user')
 var roleRouter = require('./routes/role')
 var groupRouter = require('./routes/group')
 var menuRouter = require('./routes/menu')
+var folderRouter = require('./routes/folder')
 
 var app = express();
 
@@ -44,6 +45,7 @@ app.use('/users', userRouter)
 app.use('/roles', roleRouter)
 app.use('/groups', groupRouter)
 app.use('/menus', menuRouter)
+app.use('/folders', folderRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

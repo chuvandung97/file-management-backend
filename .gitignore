@@ -2,3 +2,4 @@
 /config/minio.js
 /config/config.json
 mc.exe
+/uploads/*
