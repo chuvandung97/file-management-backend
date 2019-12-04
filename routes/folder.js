@@ -2,11 +2,18 @@ var express = require('express');
 var router = express.Router();
 var models = require('../models')
 
-//lấy danh sách tất cả group
+//lấy danh sách tất cả folder
 router.get('/lists', async function(req, res, next) {
     try {
+        let storage = await models.storage.findOne({
+            attributes: ['id'],
+            where: { name: req.query.storage_id }
+        })
+        if(!storage) {
+            return res.status(404).json({code: 404, message: "Kho không tồn tại"})
+        }
         var folderList = await models.folder.findAll({
-            where: {storage_id: req.query.storage_id},
+            where: {storage_id: storage.dataValues.id},
             order: [
                 ['name', 'ASC']
             ], 
@@ -39,14 +46,21 @@ router.get('/list/id', async function(req, res, next) {
     }
 })
 
-//tạo mới 1 group
+//tạo mới 1 folder
 router.post('/add', async function(req, res, next) {
     try {
+        let storage = await models.storage.findOne({
+            attributes: ['id'],
+            where: { name: req.body.storage_id }
+        })
+        if(!storage) {
+            return res.status(404).json({code: 404, message: "Kho không tồn tại"})
+        }
         models.sequelize.transaction(t => {
             return models.folder.create({
                 parent_id: req.body.parent_id,
                 name: req.body.name,
-                storage_id: req.body.storage_id,
+                storage_id: storage.dataValues.id,
                 created_by: req.body.created_by
             }, {transaction: t})
         }).then(() => {

@@ -78,7 +78,7 @@ router.post('/', [
                                     models.sequelize.transaction(t => {
                                         return user_token_detail.update({token: token, invoked: false}, {transaction: t})
                                             .then(() => {
-                                                return res.status(200).json({code: 200, message: "Success", body: {token: token, bucket: {id: data.storage.dataValues.id, name: data.storage.dataValues.name} }})
+                                                return res.status(200).json({code: 200, message: "Success", body: {token: token, bucket: data.storage.dataValues.name} })
                                             })
                                             .catch((err1) => {
                                                 return res.status(500).json({code: 500, message: "Update token fail", body: {err1}})
@@ -100,7 +100,10 @@ router.post('/', [
                                         name: nameBucket,
                                     }, {transaction: t})
                                     .then((storage) => {
-                                        return result.update({storage_id: storage.id}, {transaction: t})
+                                        return result.update({
+                                                storage_id: storage.id,
+                                                active: true
+                                            }, {transaction: t})
                                             .then(async () => {
                                                 await minioClient.makeBucket(nameBucket, 'us-east-1')
                                                 /* shell.exec(cmdMinio.createPolicy('local'))
@@ -110,7 +113,7 @@ router.post('/', [
                                     })
                                 })
                             }).then(() => {
-                                return res.status(200).json({ code: 200, message: "Success", body: { token: token, refreshToken: refreshToken, bucket: {id: storage.id, name: nameBucket} } });
+                                return res.status(200).json({ code: 200, message: "Success", body: { token: token, refreshToken: refreshToken, bucket: nameBucket } });
                             }).catch((err3) => {
                                 return res.status(500).json({ code: 500, message: "Login failed.", body: {err3} });
                             })
