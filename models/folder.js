@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     storage_id: DataTypes.INTEGER,
     description: DataTypes.STRING,
+    active: DataTypes.BOOLEAN,
     created_by: DataTypes.INTEGER,
     updated_by: DataTypes.INTEGER
   }, {});
@@ -20,6 +21,8 @@ module.exports = (sequelize, DataTypes) => {
     Folder.hasMany(models.folder, {
       as: 'child_folder',
       foreignKey: 'parent_id',
+      onDelete: 'CASCADE',
+      hooks: true,
     })
 
     Folder.belongsTo(models.folder, {

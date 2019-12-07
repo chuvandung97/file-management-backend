@@ -22,6 +22,10 @@ module.exports = {
       description: {
         type: Sequelize.STRING(250)
       },
+      active: {
+        defaultValue: true,
+        type: Sequelize.BOOLEAN
+      },
       created_by: {
         type: Sequelize.INTEGER
       },

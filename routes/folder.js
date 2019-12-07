@@ -13,7 +13,11 @@ router.get('/lists', async function(req, res, next) {
             return res.status(404).json({code: 404, message: "Kho không tồn tại"})
         }
         var folderList = await models.folder.findAll({
-            where: {storage_id: storage.dataValues.id},
+            where: {
+                storage_id: storage.dataValues.id,
+                parent_id: null,
+                active: req.query.active
+            },
             order: [
                 ['name', 'ASC']
             ], 
@@ -31,18 +35,33 @@ router.get('/lists', async function(req, res, next) {
     }
 })
 
-//lấy một group theo id 
-router.get('/list/id', async function(req, res, next) {
-    var group = await models.group.findOne({
-        where: {id: req.query.groupId},
-        include: [{ model: models.storage, include: [
-            models.User
-        ] }],
-    })
-    if(!group) {
-        return res.status(404).json({code: 404, message: "Nhóm không tồn tại"})
-    } else {
-        return res.status(200).json({code: 200, message: "Success", body: {group: group}})
+//lấy danh sách tất cả folder con của folder cha đc chỉ định
+router.get('/lists/subfolder', async function(req, res, next) {
+    try {
+        let storage = await models.storage.findOne({
+            attributes: ['id'],
+            where: { name: req.query.storage_id }
+        })
+        if(!storage) {
+            return res.status(404).json({code: 404, message: "Kho không tồn tại"})
+        }
+        var folderList = await models.folder.findAll({
+            where: {
+                storage_id: storage.dataValues.id,
+                parent_id: req.query.parent_id
+            },
+            order: [
+                ['name', 'ASC']
+            ], 
+            include: [{ model: models.folder, as: 'child_folder' }, { model: models.folder, as: 'parent_folder' }, {model: models.User}],
+        })
+        if(!folderList) {
+            return res.status(404).json({code: 404, message: "Thư mục không tồn tại"})
+        } else {
+            return res.status(200).json({code: 200, message: "Success", body: {folder_list: folderList}})
+        }
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
     }
 })
 
@@ -61,7 +80,8 @@ router.post('/add', async function(req, res, next) {
                 parent_id: req.body.parent_id,
                 name: req.body.name,
                 storage_id: storage.dataValues.id,
-                created_by: req.body.created_by
+                created_by: req.body.created_by,
+                active: true
             }, {transaction: t})
         }).then(() => {
             return res.status(200).json({code: 200, message: "Thêm mới thư mục thành công !"})
@@ -73,35 +93,55 @@ router.post('/add', async function(req, res, next) {
     }
 })
 
-//cập nhật 1 group
-router.post('/update/:groupId', async function(req, res, next) {
+//tạo mới 1 folder
+router.post('/update/:folderId', async function(req, res, next) {
     try {
-        var name = req.body.name
-        var checkGroup = await models.group.findOne({ where: {id: req.params.groupId} })
-        if(checkGroup) {
+        let checkFolder = await models.folder.findOne({where: { id: req.params.folderId }})
+        if(checkFolder) {
             models.sequelize.transaction(t => {
-                return checkGroup.update({
-                    name: name,
-                    description: req.body.description
+                return checkFolder.update({
+                    name: req.body.name,
                 }, {transaction: t})
             }).then(() => {
-                return res.status(200).json({code: 200, message: "Cập nhật thành công !"})
+                return res.status(200).json({code: 200, message: "Đổi tên thư mục thành công !"})
             }).catch(err => {
-                return res.status(500).json({code: 500, message: "Cập nhật thất bại !", body: {err}})
+                return res.status(500).json({code: 500, message: "Đổi tên thư mục thất bại !", body: {err}})
             })
         } else {
-            return res.status(404).json({code: 404, message: "Không tồn tại nhóm !"})
+            return res.status(404).json({code: 404, message: "Thư mục không tồn tại !"})
         }
     } catch(e) {
-        return res.status(500).json({code: 500, message: "Cập nhật thất bại !", body: {e}})
+        return res.status(500).json({code: 500, message: "Lỗi server !", body: {e}})
     }
 })
 
-router.delete('/delete', async function(req, res, next) {
+//di chuyển folder vào thùng rác
+router.post('/remove/trash/:folderId', async function(req, res, next) {
+    try {
+        let checkFolder = await models.folder.findOne({where: { id: req.params.folderId }})
+        if(checkFolder) {
+            models.sequelize.transaction(t => {
+                return checkFolder.update({
+                    active: false,
+                }, {transaction: t})
+            }).then(() => {
+                return res.status(200).json({code: 200, message: "Xóa thư mục thành công !"})
+            }).catch(err => {
+                return res.status(500).json({code: 500, message: "Xóa thư mục thất bại !", body: {err}})
+            })
+        } else {
+            return res.status(404).json({code: 404, message: "Thư mục không tồn tại !"})
+        }
+    } catch(e) {
+        return res.status(500).json({code: 500, message: "Lỗi server !", body: {e}})
+    }
+})
+
+router.delete('/delete', function(req, res, next) {
     try {
         models.sequelize.transaction(t => {
-            return models.group.destroy({ 
-                where: {id: req.query.groupIds },
+            return models.folder.destroy({ 
+                where: {id: req.query.folderId },
             }, {transaction: t})
         }).then(affectedRows => {
             return res.status(200).json({code: 200, message: "Xoá thành công ", count: affectedRows})

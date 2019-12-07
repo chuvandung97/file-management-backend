@@ -169,7 +169,6 @@ router.delete('/delete', function(req, res, next) {
 router.delete('/delete/role', async function(req, res, next) {
     try {
         var checkRole = await models.rolemenu.findOne({
-            attributes: ['id'],
             where: {
                 menu_id: req.query.menu_id, 
                 role_id: req.query.role_id
