@@ -137,6 +137,24 @@ router.post('/remove/trash/:folderId', async function(req, res, next) {
     }
 })
 
+//khôi phục folder
+router.post('/restore', async function(req, res, next) {
+    try {
+        models.sequelize.transaction(t => {
+            return models.folder.update(
+                { active: true },
+                { where: {id: req.body.folderId} }, 
+                {transaction: t})
+        }).then((affectedRows) => {
+            return res.status(200).json({code: 200, message: "Khôi phục thành công !", count: affectedRows })
+        }).catch(err => {
+            return res.status(500).json({code: 500, message: "Khôi phục thất bại !", body: {err}})
+        })
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
 router.delete('/delete', function(req, res, next) {
     try {
         models.sequelize.transaction(t => {
