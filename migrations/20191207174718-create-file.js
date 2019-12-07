@@ -17,15 +17,18 @@ module.exports = {
       size: {
         type: Sequelize.STRING
       },
-      folder_id: {
-        type: Sequelize.INTEGER
-      },
       storage_id: {
         type: Sequelize.INTEGER
       },
       active: {
         defaultValue: true,
         type: Sequelize.BOOLEAN
+      },
+      created_by: {
+        type: Sequelize.INTEGER
+      },
+      updated_by: {
+        type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,
