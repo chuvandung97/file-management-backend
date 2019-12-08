@@ -4,9 +4,6 @@ module.exports = (sequelize, DataTypes) => {
     code: DataTypes.STRING,
     name: DataTypes.STRING,
     description: DataTypes.STRING
-  }, {
-    sequelize, 
-    modelName: 'role'
   });
   Role.associate = function(models) {
     Role.hasMany(models.User, {

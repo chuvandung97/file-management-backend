@@ -29,6 +29,11 @@ module.exports = (sequelize, DataTypes) => {
       as: 'parent_folder',
       foreignKey: 'parent_id',
     })
+
+    Folder.belongsToMany(models.file, {
+      through: models.folderfile,
+      foreignKey: 'folder_id'
+    })
   };
   return Folder;
 };

@@ -8,8 +8,6 @@ var cors = require('cors')
 const bearerToken = require('express-bearer-token');
 
 var indexRouter = require('./routes/index');
-var uploadFileRouter = require('./routes/uploadFile');
-var downloadFileRouter = require('./routes/downloadFile');
 var registerRouter = require('./routes/register');
 var loginRouter = require('./routes/login')
 var logoutRouter = require('./routes/logout')
@@ -18,6 +16,7 @@ var roleRouter = require('./routes/role')
 var groupRouter = require('./routes/group')
 var menuRouter = require('./routes/menu')
 var folderRouter = require('./routes/folder')
+var fileRouter = require('./routes/file')
 
 var app = express();
 
@@ -36,8 +35,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/upload', uploadFileRouter);
-app.use('/download', downloadFileRouter);
 app.use('/register', registerRouter);
 app.use('/login', loginRouter);
 app.use('/logout', logoutRouter);
@@ -46,6 +43,8 @@ app.use('/roles', roleRouter)
 app.use('/groups', groupRouter)
 app.use('/menus', menuRouter)
 app.use('/folders', folderRouter)
+app.use('/files', fileRouter)
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
