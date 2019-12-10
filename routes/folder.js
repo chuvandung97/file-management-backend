@@ -143,10 +143,10 @@ router.post('/restore', async function(req, res, next) {
         models.sequelize.transaction(t => {
             return models.folder.update(
                 { active: true },
-                { where: {id: req.body.folderId} }, 
+                { where: {id: req.body.folderIds} }, 
                 {transaction: t})
-        }).then((affectedRows) => {
-            return res.status(200).json({code: 200, message: "Khôi phục thành công !", count: affectedRows })
+        }).then(() => {
+            return res.status(200).json({code: 200, message: "Khôi phục thành công !"})
         }).catch(err => {
             return res.status(500).json({code: 500, message: "Khôi phục thất bại !", body: {err}})
         })
