@@ -19,14 +19,14 @@ module.exports = (sequelize, DataTypes) => {
     })
 
     Folder.hasMany(models.folder, {
-      as: 'child_folder',
+      as: 'children',
       foreignKey: 'parent_id',
       onDelete: 'CASCADE',
       hooks: true,
     })
 
     Folder.belongsTo(models.folder, {
-      as: 'parent_folder',
+      as: 'parent',
       foreignKey: 'parent_id',
     })
 
