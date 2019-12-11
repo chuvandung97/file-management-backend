@@ -93,7 +93,7 @@ router.post('/add', async function(req, res, next) {
     }
 })
 
-//tạo mới 1 folder
+//cập nhật tên folder
 router.post('/update/:folderId', async function(req, res, next) {
     try {
         let checkFolder = await models.folder.findOne({where: { id: req.params.folderId }})
@@ -159,7 +159,7 @@ router.delete('/delete', function(req, res, next) {
     try {
         models.sequelize.transaction(t => {
             return models.folder.destroy({ 
-                where: {id: req.query.folderId },
+                where: {id: req.query.folderIds },
             }, {transaction: t})
         }).then(affectedRows => {
             return res.status(200).json({code: 200, message: "Xoá thành công ", count: affectedRows})

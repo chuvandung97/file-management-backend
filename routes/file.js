@@ -76,4 +76,82 @@ router.get('/lists', async function(req, res, next) {
     
 })
 
+//cập nhật tên file
+router.post('/update/:fileId', async function(req, res, next) {
+    try {
+        let checkFile = await models.file.findOne({where: { id: req.params.fileId }})
+        if(checkFile) {
+            models.sequelize.transaction(t => {
+                return checkFile.update({
+                    name: req.body.name,
+                }, {transaction: t})
+            }).then(() => {
+                return res.status(200).json({code: 200, message: "Đổi tên file thành công !"})
+            }).catch(err => {
+                return res.status(500).json({code: 500, message: "Đổi tên file thất bại !", body: {err}})
+            })
+        } else {
+            return res.status(404).json({code: 404, message: "File không tồn tại !"})
+        }
+    } catch(e) {
+        return res.status(500).json({code: 500, message: "Lỗi server !", body: {e}})
+    }
+})
+
+//di chuyển file vào thùng rác
+router.post('/remove/trash/:fileId', async function(req, res, next) {
+    try {
+        let checkFile = await models.file.findOne({where: { id: req.params.fileId }})
+        if(checkFile) {
+            models.sequelize.transaction(t => {
+                return checkFile.update({
+                    active: false,
+                }, {transaction: t})
+            }).then(() => {
+                return res.status(200).json({code: 200, message: "Xóa file thành công !"})
+            }).catch(err => {
+                return res.status(500).json({code: 500, message: "Xóa file thất bại !", body: {err}})
+            })
+        } else {
+            return res.status(404).json({code: 404, message: "File không tồn tại !"})
+        }
+    } catch(e) {
+        return res.status(500).json({code: 500, message: "Lỗi server !", body: {e}})
+    }
+})
+
+//khôi phục file
+router.post('/restore', async function(req, res, next) {
+    try {
+        models.sequelize.transaction(t => {
+            return models.file.update(
+                { active: true },
+                { where: {id: req.body.fileIds} }, 
+                {transaction: t})
+        }).then(() => {
+            return res.status(200).json({code: 200, message: "Khôi phục thành công !"})
+        }).catch(err => {
+            return res.status(500).json({code: 500, message: "Khôi phục thất bại !", body: {err}})
+        })
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
+router.delete('/delete', function(req, res, next) {
+    try {
+        models.sequelize.transaction(t => {
+            return models.file.destroy({ 
+                where: {id: req.query.fileIds },
+            }, {transaction: t})
+        }).then(affectedRows => {
+            return res.status(200).json({code: 200, message: "Xoá thành công ", count: affectedRows})
+        }).catch(err => {
+            return res.status(500).json({code: 500, message: "Xóa thất bại !", body: {err}})
+        })
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Xóa thất bại !", body: {error}})
+    }
+})
+
 module.exports = router;
