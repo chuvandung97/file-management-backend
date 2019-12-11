@@ -20,7 +20,6 @@ router.post('/upload', Multer({dest: "./uploads/"}).single("file"), function(req
             if(!storage) {
                 return res.status(404).json({code: 404, message: "Kho không tồn tại"})
             }
-            console.log(req.file)
             models.sequelize.transaction(t => {
                 return models.file.create({
                     name: req.file.originalname,
@@ -29,6 +28,15 @@ router.post('/upload', Multer({dest: "./uploads/"}).single("file"), function(req
                     storage_id: storage.dataValues.id,
                     created_by: req.query.created_by
                 }, {transaction: t})
+                    .then((file) => {
+                        let folder_id = req.query.folder_id
+                        if(folder_id) {
+                            return models.folderfile.create({
+                                folder_id: folder_id,
+                                file_id: file.id
+                            }, {transaction: t})
+                        }
+                    })
             }).then(() => {
                 return res.status(200).json({ code: 200, message: "Tải lên thành công !"});
             }).catch((err1) => {
@@ -74,6 +82,34 @@ router.get('/lists', async function(req, res, next) {
         return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
     }
     
+})
+
+//lấy danh sách tất cả file trong folder cha đc chỉ định
+router.get('/lists/parentfolder', async function(req, res, next) {
+    try {
+        var fileList = await models.file.findAll({
+            where: {
+                active: req.query.active
+            },
+            order: [
+                ['name', 'ASC']
+            ], 
+            include: [{ 
+                model: models.folder,
+                where: { id: req.query.folder_id },
+                required: true
+            },  
+                {model: models.User}
+            ],
+        })
+        if(!fileList) {
+            return res.status(404).json({code: 404, message: "File không tồn tại"})
+        } else {
+            return res.status(200).json({code: 200, message: "Success", body: {file_list: fileList}})
+        }
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
 })
 
 //cập nhật tên file

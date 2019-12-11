@@ -38,6 +38,29 @@ router.get('/lists', async function(req, res, next) {
 //lấy danh sách tất cả folder con của folder cha đc chỉ định
 router.get('/lists/subfolder', async function(req, res, next) {
     try {
+        var folderList = await models.folder.findAll({
+            where: {
+                parent_id: req.query.folder_id,
+                active: true
+            },
+            order: [
+                ['name', 'ASC']
+            ], 
+            include: [{ model: models.folder, as: 'child_folder' }, { model: models.folder, as: 'parent_folder' }, {model: models.User}],
+        })
+        if(!folderList) {
+            return res.status(404).json({code: 404, message: "Thư mục không tồn tại"})
+        } else {
+            return res.status(200).json({code: 200, message: "Success", body: {folder_list: folderList}})
+        }
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
+//lấy danh sách tất cả folder trong thùng rác
+router.get('/lists/trash', async function(req, res, next) {
+    try {
         let storage = await models.storage.findOne({
             attributes: ['id'],
             where: { name: req.query.storage_id }
@@ -48,12 +71,9 @@ router.get('/lists/subfolder', async function(req, res, next) {
         var folderList = await models.folder.findAll({
             where: {
                 storage_id: storage.dataValues.id,
-                parent_id: req.query.parent_id
+                active: req.query.active
             },
-            order: [
-                ['name', 'ASC']
-            ], 
-            include: [{ model: models.folder, as: 'child_folder' }, { model: models.folder, as: 'parent_folder' }, {model: models.User}],
+            include: [{ model: models.folder, as: 'child_folder' }, {model: models.User}],
         })
         if(!folderList) {
             return res.status(404).json({code: 404, message: "Thư mục không tồn tại"})
