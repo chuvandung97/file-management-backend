@@ -5,7 +5,10 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     storage_id: DataTypes.INTEGER,
     description: DataTypes.STRING,
-    active: DataTypes.BOOLEAN,
+    active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
     created_by: DataTypes.INTEGER,
     updated_by: DataTypes.INTEGER
   }, {});
