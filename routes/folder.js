@@ -175,6 +175,24 @@ router.post('/restore', async function(req, res, next) {
     }
 })
 
+//di chuyển folder
+router.post('/move/:folderId', async function(req, res, next) {
+    try {
+        models.sequelize.transaction(t => {
+            return models.folder.update(
+                { parent_id: req.body.folderId },
+                { where: {id: req.params.folderId} }, 
+                {transaction: t})
+        }).then(() => {
+            return res.status(200).json({code: 200, message: "Di chuyển thành công !"})
+        }).catch(err => {
+            return res.status(500).json({code: 500, message: "Di chuyển thất bại !", body: {err}})
+        })
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
 router.delete('/delete', function(req, res, next) {
     try {
         models.sequelize.transaction(t => {
