@@ -3,8 +3,10 @@ var router = express.Router();
 var Multer = require("multer");
 var minioClient = require('../config/minio');
 const models = require('../models')
+var upload = Multer({dest: "./uploads/"})
+const fs   = require('fs');
 
-router.post('/upload', Multer({dest: "./uploads/"}).single("file"), function(req, res) {
+router.post('/upload', upload.single("file"), function(req, res) {
     var metaData = {
         'Content-Type': 'image/*, audio/*, application/*, font/*, text/*, video/*',
     } 
@@ -13,6 +15,9 @@ router.post('/upload', Multer({dest: "./uploads/"}).single("file"), function(req
             return res.status(500).json({ code: 500, message: "Tải lên thất bại !", body: {err} });
         }
         try {
+            fs.unlink(req.file.destination + req.file.filename, (err) => {
+                console.log(err)
+            })
             let storage = await models.storage.findOne({
                 attributes: ['id'],
                 where: { name: req.query.bucket_name }
