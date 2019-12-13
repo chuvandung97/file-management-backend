@@ -209,8 +209,9 @@ router.post('/move/:fileId', async function(req, res, next) {
     }
 })
 
-router.delete('/delete', function(req, res, next) {
+router.delete('/delete', async function(req, res, next) {
     try {
+        await minioClient.removeObjects(req.query.storage, req.query.fileNames)
         models.sequelize.transaction(t => {
             return models.file.destroy({ 
                 where: {id: req.query.fileIds },
@@ -221,7 +222,7 @@ router.delete('/delete', function(req, res, next) {
             return res.status(500).json({code: 500, message: "Xóa thất bại !", body: {err}})
         })
     } catch (error) {
-        return res.status(500).json({code: 500, message: "Xóa thất bại !", body: {error}})
+        return res.status(500).json({code: 500, message: "Lỗi server !", body: {error}})
     }
 })
 
