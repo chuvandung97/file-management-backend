@@ -50,15 +50,14 @@ router.post('/upload', upload.single("file"), function(req, res) {
         } catch (error) {
             return res.status(500).json({code: 500, message: "Lỗi server !", body: {err}})
         }
-        //res.send(req.file);
     });
 });
 
 router.get('/download', function(req, res) {
-    minioClient.presignedGetObject(req.query.bucket_name, req.query.name, 60, function(err, presignedUrl) {
+    minioClient.getObject(req.query.bucket_name, req.query.name, function(err, dataStream) {
         if (err) return res.status(500).json({ code: 500, message: "Tải xuống thất bại !", body: {err} });
-        res.status(200).json({ code: 200, message: "Tải xuống thành công !", body: {url: presignedUrl} })
-    }) 
+        dataStream.pipe(res)
+    })  
 });
 
 //lấy danh sách tất cả file
