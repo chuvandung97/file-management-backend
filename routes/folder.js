@@ -23,7 +23,15 @@ router.get('/lists', async function(req, res, next) {
             ], 
             include: [{ model: models.storage, include: [
                 models.User
-            ] }, { model: models.folder, as: 'children' }, {model: models.User}],
+            ] }, { model: models.folder, as: 'children', include: {
+                model: models.folder, as: 'children', include: {
+                    model: models.folder, as: 'children', include: {
+                        model: models.folder, as: 'children', include: {
+                            model: models.folder, as: 'children'
+                        }
+                    }
+                }
+            } }, {model: models.User}],
         })
         if(!folderList) {
             return res.status(404).json({code: 404, message: "Thư mục không tồn tại"})
@@ -46,7 +54,23 @@ router.get('/lists/subfolder', async function(req, res, next) {
             order: [
                 ['name', 'ASC']
             ], 
-            include: [{ model: models.folder, as: 'children' }, { model: models.folder, as: 'parent' }, {model: models.User}],
+            include: [{ model: models.folder, as: 'children', include: {
+                model: models.folder, as: 'children', include: {
+                    model: models.folder, as: 'children', include: {
+                        model: models.folder, as: 'children', include: {
+                            model: models.folder, as: 'children'
+                        }
+                    }
+                }
+            } }, { model: models.folder, as: 'parent', include: {
+                model: models.folder, as: 'parent', include: {
+                    model: models.folder, as: 'parent', include: {
+                        model: models.folder, as: 'parent', include: {
+                            model: models.folder, as: 'parent'
+                        }
+                    }
+                }
+            }}, {model: models.User}],
         })
         if(!folderList) {
             return res.status(404).json({code: 404, message: "Thư mục không tồn tại"})
