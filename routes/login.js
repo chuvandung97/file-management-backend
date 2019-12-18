@@ -95,22 +95,25 @@ router.post('/', [
                                     refresh_token: refreshToken,
                                     invoked: false,
                                 }, {transaction: t})
-                                .then(() => {
-                                    return models.storage.create({
-                                        name: nameBucket,
-                                    }, {transaction: t})
-                                    .then((storage) => {
-                                        return result.update({
-                                                storage_id: storage.id,
-                                                active: true
-                                            }, {transaction: t})
-                                            .then(async () => {
-                                                await minioClient.makeBucket(nameBucket, 'us-east-1')
-                                                /* shell.exec(cmdMinio.createPolicy('local'))
-                                                shell.exec(cmdMinio.createUser('local', data.email, data.password))
-                                                shell.exec(cmdMinio.setUserPolicy('local', data.email)) */
-                                            })
-                                    })
+                                .then(async () => {
+                                    let checkBucketExists = await minioClient.bucketExists(nameBucket)
+                                    if(!checkBucketExists) {
+                                        return models.storage.create({
+                                            name: nameBucket,
+                                        }, {transaction: t})
+                                        .then((storage) => {
+                                            return result.update({
+                                                    storage_id: storage.id,
+                                                    active: true
+                                                }, {transaction: t})
+                                                .then(async () => {
+                                                    await minioClient.makeBucket(nameBucket, 'us-east-1')
+                                                    /* shell.exec(cmdMinio.createPolicy('local'))
+                                                    shell.exec(cmdMinio.createUser('local', data.email, data.password))
+                                                    shell.exec(cmdMinio.setUserPolicy('local', data.email)) */
+                                                })
+                                        })
+                                    }
                                 })
                             }).then(() => {
                                 return res.status(200).json({ code: 200, message: "Success", body: { token: token, refreshToken: refreshToken, bucket: nameBucket } });
