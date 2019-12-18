@@ -37,6 +37,12 @@ module.exports = (sequelize, DataTypes) => {
       through: models.folderfile,
       foreignKey: 'folder_id'
     })
+
+    Folder.hasMany(models.folderlog, {
+      foreignKey: 'folder_id',
+      onDelete: 'CASCADE',
+      hooks: true,
+    })
   };
   return Folder;
 };

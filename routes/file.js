@@ -6,6 +6,7 @@ const models = require('../models')
 var upload = Multer({dest: "./uploads/"})
 const fs   = require('fs');
 
+//upload.any() up nhieu file
 router.post('/upload', upload.single("file"), function(req, res) {
     var metaData = {
         'Content-Type': 'image/*, audio/*, application/*, font/*, text/*, video/*',
