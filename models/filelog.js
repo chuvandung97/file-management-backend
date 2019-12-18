@@ -7,7 +7,9 @@ module.exports = (sequelize, DataTypes) => {
     updated_by: DataTypes.INTEGER
   }, {});
   FileLog.associate = function(models) {
-    // associations can be defined here
+    FileLog.belongsTo(models.file, {
+      foreignKey: 'file_id',
+    })
   };
   return FileLog;
 };

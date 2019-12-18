@@ -26,16 +26,22 @@ router.post('/upload', upload.single("file"), function(req, res) {
             if(!storage) {
                 return res.status(404).json({code: 404, message: "Kho không tồn tại"})
             }
+            let folder_id = req.query.folder_id ? req.query.folder_id : null
+            let folderName = await models.folder.findOne({ where: { id: folder_id} })   
             models.sequelize.transaction(t => {
                 return models.file.create({
                     name: req.file.originalname,
                     type: req.file.mimetype,
                     size: req.file.size,
                     storage_id: storage.dataValues.id,
-                    created_by: req.query.created_by
-                }, {transaction: t})
+                    created_by: req.query.created_by,
+                    filelogs: [{
+                        log: 'at ' + (folderName ? folderName.dataValues.name : 'Drive'),
+                        action: 'created',
+                        updated_by: req.body.user_id
+                    }]
+                }, { include: [models.filelog] } ,{transaction: t})
                     .then((file) => {
-                        let folder_id = req.query.folder_id
                         if(folder_id) {
                             return models.folderfile.create({
                                 folder_id: folder_id,
@@ -117,15 +123,27 @@ router.get('/lists/parentfolder', async function(req, res, next) {
     }
 })
 
-//cập nhật tên file
+//đổi tên file
 router.post('/update/:fileId', async function(req, res, next) {
     try {
         let checkFile = await models.file.findOne({where: { id: req.params.fileId }})
+        let user_id = req.body.user_id
+        let old_name = checkFile.dataValues.name
+        let new_name = req.body.name
         if(checkFile) {
             models.sequelize.transaction(t => {
                 return checkFile.update({
-                    name: req.body.name,
+                    name: new_name,
+                    updated_by: user_id,
                 }, {transaction: t})
+                .then((file) => {
+                    return models.filelog.create({
+                        log: old_name + ' to ' + new_name,
+                        file_id: file.dataValues.id,
+                        action: 'renamed',
+                        updated_by: user_id
+                    }, {transaction: t})
+                })
             }).then(() => {
                 return res.status(200).json({code: 200, message: "Đổi tên file thành công !"})
             }).catch(err => {
@@ -148,6 +166,14 @@ router.post('/remove/trash/:fileId', async function(req, res, next) {
                 return checkFile.update({
                     active: false,
                 }, {transaction: t})
+                .then((file) => {
+                    return models.filelog.create({
+                        log: 'true to false',
+                        file_id: file.dataValues.id,
+                        action: 'changedActive',
+                        updated_by: req.body.user_id
+                    }, {transaction: t})
+                })
             }).then(() => {
                 return res.status(200).json({code: 200, message: "Xóa file thành công !"})
             }).catch(err => {
@@ -164,11 +190,24 @@ router.post('/remove/trash/:fileId', async function(req, res, next) {
 //khôi phục file
 router.post('/restore', async function(req, res, next) {
     try {
+        let fileIds = req.body.fileIds
         models.sequelize.transaction(t => {
             return models.file.update(
                 { active: true },
-                { where: {id: req.body.fileIds} }, 
+                { where: {id: fileIds} }, 
                 {transaction: t})
+                .then(() => {
+                    let filelog = []
+                    for (let fileId of fileIds) {
+                        filelog.push({
+                            log: 'false to true', 
+                            file_id: fileId, 
+                            action: 'changedActive', 
+                            updated_by: req.body.user_id
+                        })
+                    }
+                    return models.filelog.bulkCreate(filelog, {transaction: t})
+                })
         }).then(() => {
             return res.status(200).json({code: 200, message: "Khôi phục thành công !"})
         }).catch(err => {
@@ -182,12 +221,25 @@ router.post('/restore', async function(req, res, next) {
 //di chuyển file
 router.post('/move/:fileId', async function(req, res, next) {
     try {
-        if(req.body.oldFolderId === undefined) {
+        let fileId = req.params.fileId
+        let oldFolderId = req.body.oldFolderId ? req.body.oldFolderId : null
+        let newFolderId = req.body.newFolderId
+        let oldFolderName = await models.folder.findOne({ where: { id: oldFolderId } })
+        let newFolderName = await models.folder.findOne({ where: { id: newFolderId } })
+        if(oldFolderId === null) {
             models.sequelize.transaction(t => {
                 return models.folderfile.create({
-                    folder_id: req.body.newFolderId,
-                    file_id: req.params.fileId
+                    folder_id: newFolderId,
+                    file_id: fileId
                 }, {transaction: t})
+                    .then(() => {
+                        return models.filelog.create({
+                            log: 'Drive to ' + newFolderName.dataValues.name,
+                            file_id: fileId,
+                            action: 'moved',
+                            updated_by: req.body.user_id
+                        }, {transaction: t})
+                    })
             }).then(() => {
                 return res.status(200).json({code: 200, message: "Di chuyển thành công !"})
             }).catch(err => {
@@ -196,9 +248,17 @@ router.post('/move/:fileId', async function(req, res, next) {
         } else {
             models.sequelize.transaction(t => {
                 return models.folderfile.update(
-                    { folder_id: req.body.newFolderId },
-                    { where: {folder_id: req.body.oldFolderId, file_id: req.params.fileId} }, 
+                    { folder_id: newFolderId },
+                    { where: {folder_id: oldFolderId, file_id: fileId} }, 
                     {transaction: t})
+                    .then(() => {
+                        return models.filelog.create({
+                            log: oldFolderName.dataValues.name + ' to ' + newFolderName.dataValues.name,
+                            file_id: fileId,
+                            action: 'moved',
+                            updated_by: req.body.user_id
+                        }, {transaction: t})
+                    })
             }).then(() => {
                 return res.status(200).json({code: 200, message: "Di chuyển thành công !"})
             }).catch(err => {

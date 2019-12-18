@@ -119,14 +119,21 @@ router.post('/add', async function(req, res, next) {
         if(!storage) {
             return res.status(404).json({code: 404, message: "Kho không tồn tại"})
         }
+        let parent_id = req.body.parent_id ? req.body.parent_id : null
+        let parentFolderName = await models.folder.findOne({ where: { id: parent_id} })        
         models.sequelize.transaction(t => {
             return models.folder.create({
-                parent_id: req.body.parent_id,
+                parent_id: parent_id,
                 name: req.body.name,
                 storage_id: storage.dataValues.id,
                 created_by: req.body.created_by,
-                active: true
-            }, {transaction: t})
+                active: true,
+                folderlogs: [{
+                    log: 'at ' + (parentFolderName ? parentFolderName.dataValues.name : 'Drive'),
+                    action: 'created',
+                    updated_by: req.body.user_id
+                }]
+            }, { include: [models.folderlog] } ,{transaction: t})
         }).then(() => {
             return res.status(200).json({code: 200, message: "Thêm mới thư mục thành công !"})
         }).catch(error => {
@@ -137,15 +144,26 @@ router.post('/add', async function(req, res, next) {
     }
 })
 
-//cập nhật tên folder
+//đổi tên folder
 router.post('/update/:folderId', async function(req, res, next) {
     try {
         let checkFolder = await models.folder.findOne({where: { id: req.params.folderId }})
+        let user_id = req.body.user_id
+        let old_name = checkFolder.dataValues.name
+        let new_name = req.body.name
         if(checkFolder) {
             models.sequelize.transaction(t => {
                 return checkFolder.update({
-                    name: req.body.name,
+                    name: new_name,
                 }, {transaction: t})
+                .then((folder) => {
+                    return models.folderlog.create({
+                        log: old_name + ' to ' + new_name,
+                        folder_id: folder.dataValues.id,
+                        action: 'renamed',
+                        updated_by: user_id
+                    }, {transaction: t})
+                })
             }).then(() => {
                 return res.status(200).json({code: 200, message: "Đổi tên thư mục thành công !"})
             }).catch(err => {
@@ -168,6 +186,14 @@ router.post('/remove/trash/:folderId', async function(req, res, next) {
                 return checkFolder.update({
                     active: false,
                 }, {transaction: t})
+                .then((folder) => {
+                    return models.folderlog.create({
+                        log: 'true to false',
+                        folder_id: folder.dataValues.id,
+                        action: 'changedActive',
+                        updated_by: req.body.user_id
+                    }, {transaction: t})
+                })
             }).then(() => {
                 return res.status(200).json({code: 200, message: "Xóa thư mục thành công !"})
             }).catch(err => {
@@ -184,11 +210,24 @@ router.post('/remove/trash/:folderId', async function(req, res, next) {
 //khôi phục folder
 router.post('/restore', async function(req, res, next) {
     try {
+        let folderIds = req.body.folderIds
         models.sequelize.transaction(t => {
             return models.folder.update(
                 { active: true },
-                { where: {id: req.body.folderIds} }, 
+                { where: {id: folderIds} }, 
                 {transaction: t})
+            .then(() => {
+                let folderlog = []
+                for (let folderId of folderIds) {
+                    folderlog.push({
+                        log: 'false to true', 
+                        folder_id: folderId, 
+                        action: 'changedActive', 
+                        updated_by: req.body.user_id
+                    })
+                }
+                return models.folderlog.bulkCreate(folderlog, {transaction: t})
+            })
         }).then(() => {
             return res.status(200).json({code: 200, message: "Khôi phục thành công !"})
         }).catch(err => {
@@ -202,11 +241,22 @@ router.post('/restore', async function(req, res, next) {
 //di chuyển folder
 router.post('/move/:folderId', async function(req, res, next) {
     try {
+        let oldFolderId = req.params.folderId
+        let newFolderId = req.body.folderId
+        let newFolderName = await models.folder.findOne({ where: { id: newFolderId } })
         models.sequelize.transaction(t => {
             return models.folder.update(
-                { parent_id: req.body.folderId },
-                { where: {id: req.params.folderId} }, 
+                { parent_id: newFolderId },
+                { where: {id: oldFolderId} }, 
                 {transaction: t})
+                .then(() => {
+                    return models.folderlog.create({
+                        log: 'To ' + newFolderName.dataValues.name,
+                        folder_id: oldFolderId,
+                        action: 'moved',
+                        updated_by: req.body.user_id
+                    }, {transaction: t})
+                })
         }).then(() => {
             return res.status(200).json({code: 200, message: "Di chuyển thành công !"})
         }).catch(err => {
