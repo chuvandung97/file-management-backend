@@ -38,7 +38,7 @@ router.post('/upload', upload.single("file"), function(req, res) {
                     filelogs: [{
                         log: 'at ' + (folderName ? folderName.dataValues.name : 'Drive'),
                         action: 'created',
-                        updated_by: req.body.user_id
+                        updated_by: req.query.updated_by
                     }]
                 }, { include: [models.filelog] } ,{transaction: t})
                     .then((file) => {
@@ -66,6 +66,63 @@ router.get('/download', function(req, res) {
         dataStream.pipe(res)
     })  
 });
+
+//tải bản thay thế
+router.post('/upload/replace/:fileId', upload.single("file"), function(req, res) {
+    var metaData = {
+        'Content-Type': 'image/*, audio/*, application/*, font/*, text/*, video/*',
+    } 
+    minioClient.fPutObject(req.query.bucket_name, req.file.originalname, req.file.path, metaData, async function(err, etag) {
+        if(err) {
+            return res.status(500).json({ code: 500, message: "Tải lên thất bại !", body: {err} });
+        }
+        try {
+            fs.unlink(req.file.destination + req.file.filename, (err) => {
+                console.log(err)
+            })
+            let fileId = req.params.fileId
+            let checkFile = await models.file.findOne({ where: { id: fileId } })
+            let user_id = req.query.updated_by
+            let file_history = {
+                name: checkFile.dataValues.name,
+                type: checkFile.dataValues.type,
+                size: checkFile.dataValues.size,
+                version: null,
+                file_id: fileId,
+                updated_by: user_id,
+                createdAt: checkFile.dataValues.createdAt,
+                updatedAt: checkFile.dataValues.updatedAt
+            }
+            let oldfileName = checkFile.dataValues.name
+            models.sequelize.transaction(t => {
+                return checkFile.update({
+                    name: req.file.originalname,
+                    type: req.file.mimetype,
+                    size: req.file.size,
+                    storage_id: checkFile.dataValues.storage_id,
+                    created_by: req.query.created_by,
+                }, {transaction: t})
+                    .then((file) => {
+                        return models.filelog.create({
+                            log: oldfileName + ' to ' + file.name,
+                            file_id: fileId,
+                            action: 'replaced',
+                            updated_by: user_id
+                        }, {transaction: t})
+                        .then(() => {
+                            return models.filehistory.create(file_history, {transaction: t}) 
+                        })
+                    })
+            }).then(() => {
+                return res.status(200).json({ code: 200, message: "Thay thế thành công !"});
+            }).catch((err1) => {
+                return res.status(500).json({code: 500, message: "Thay thế thất bại !", body: {err1}})
+            })
+        } catch (error) {
+            return res.status(500).json({code: 500, message: "Lỗi server !", body: {err}})
+        }
+    });
+})
 
 //lấy danh sách tất cả file
 router.get('/lists', async function(req, res, next) {
@@ -272,7 +329,7 @@ router.post('/move/:fileId', async function(req, res, next) {
 
 router.delete('/delete', async function(req, res, next) {
     try {
-        await minioClient.removeObjects(req.query.storage, req.query.fileNames)
+        //await minioClient.removeObjects(req.query.storage, req.query.fileNames)
         models.sequelize.transaction(t => {
             return models.file.destroy({ 
                 where: {id: req.query.fileIds },
