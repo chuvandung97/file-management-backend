@@ -124,34 +124,6 @@ router.post('/upload/replace/:fileId', upload.single("file"), function(req, res)
     });
 })
 
-//lấy danh sách tất cả file
-router.get('/lists', async function(req, res, next) {
-    try {
-        let storage = await models.storage.findOne({
-            attributes: ['id'],
-            where: { name: req.query.storage_id }
-        })
-        if(!storage) {
-            return res.status(404).json({code: 404, message: "Kho không tồn tại"})
-        }
-        var fileList = await models.file.findAll({
-            where: {
-                storage_id: storage.dataValues.id,
-                active: req.query.active
-            },
-            include: [{model: models.folder}, {model: models.User}]
-        })
-        if(!fileList) {
-            return res.status(404).json({code: 404, message: "Chức năng không tồn tại"})
-        } else {
-            return res.status(200).json({code: 200, message: "Success", body: {file_list: fileList}})
-        }
-    } catch (error) {
-        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
-    }
-    
-})
-
 //lấy danh sách tất cả file trong folder cha đc chỉ định
 router.get('/lists/parentfolder', async function(req, res, next) {
     try {

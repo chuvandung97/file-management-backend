@@ -9,7 +9,9 @@ module.exports = (sequelize, DataTypes) => {
     updated_by: DataTypes.INTEGER
   }, {});
   FileHistory.associate = function(models) {
-    // associations can be defined here
+    FileHistory.belongsTo(models.User, {
+      foreignKey: 'updated_by',
+    })
   };
   return FileHistory;
 };
