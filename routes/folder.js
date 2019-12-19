@@ -63,7 +63,7 @@ router.post('/add', async function(req, res, next) {
                 folderlogs: [{
                     log: 'at ' + (parentFolderName ? parentFolderName.dataValues.name : 'Drive'),
                     action: 'created',
-                    updated_by: req.body.user_id
+                    updated_by: req.body.updated_by
                 }]
             }, { include: [models.folderlog] } ,{transaction: t})
         }).then(() => {

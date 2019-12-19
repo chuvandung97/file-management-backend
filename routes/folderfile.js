@@ -6,6 +6,7 @@ var models = require('../models')
 router.get('/lists', async function(req, res, next) {
     try {
         let active = req.query.active 
+        let search = req.query.search ? req.query.search : false
         let storage = await models.storage.findOne({
             attributes: ['id'],
             where: { name: req.query.storage_id }
@@ -24,13 +25,22 @@ router.get('/lists', async function(req, res, next) {
                 [models.filehistory, 'updatedAt','desc']
             ]
         })
-        
-        let folderList = await models.folder.findAll({
-            where: {
+
+        if(search) {
+            var folderCondition = {
+                storage_id: storageId,
+                active: active
+            }
+        } else {
+            var folderCondition = {
                 storage_id: storageId,
                 parent_id: req.query.parent_id ? req.query.parent_id : null,
                 active: active
-            },
+            }
+        }
+        
+        let folderList = await models.folder.findAll({
+            where: folderCondition,
             order: [
                 ['name', 'ASC']
             ], 
@@ -46,7 +56,7 @@ router.get('/lists', async function(req, res, next) {
                 }
             } }, {model: models.User}],
         })
-        if(active == 1) {
+        if(active == 1 && !search) {
             var folderFileList = folderList.concat(fileList.filter(el => el.folders == 0))
         } else {
             var folderFileList = folderList.concat(fileList)
