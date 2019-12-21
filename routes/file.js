@@ -132,14 +132,15 @@ router.get('/lists/parentfolder', async function(req, res, next) {
                 active: req.query.active
             },
             order: [
-                ['name', 'ASC']
+                ['name', 'ASC'],
+                [models.filehistory, 'updatedAt','desc']
             ], 
             include: [{ 
                 model: models.folder,
                 where: { id: req.query.folder_id },
                 required: true
             },  
-                {model: models.User}
+                {model: models.User}, {model: models.filehistory, include: [models.User]}
             ],
         })
         if(!fileList) {
