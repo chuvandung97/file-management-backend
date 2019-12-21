@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var models = require('../models')
+var minioClient = require('../config/minio');
+const crypto = require('crypto')
 
 //lấy danh sách tất cả group
 router.get('/lists', async function(req, res, next) {
@@ -23,9 +25,9 @@ router.get('/lists', async function(req, res, next) {
 router.get('/list/id', async function(req, res, next) {
     var group = await models.group.findOne({
         where: {id: req.query.groupId},
-        include: [{ model: models.storage, include: [
-            models.User
-        ] }],
+        include: [{ model: models.storage, include: [{
+            model: models.User, include: [ models.rolegroup ]
+        }] }],
     })
     if(!group) {
         return res.status(404).json({code: 404, message: "Nhóm không tồn tại"})
@@ -42,17 +44,26 @@ router.post('/add', async function(req, res, next) {
         if(checkName) {
             return res.status(409).json({code: 409, message: "Tên nhóm đã được sử dụng"})
         } else {
+            var nameBucket = crypto.createHmac('md5', name).digest('hex');
             models.sequelize.transaction(t => {
                 return models.group.create({
                     name: name,
                     description: req.body.description,
                     storage: {
-                        name: name,
+                        name: nameBucket,
                         active: true,
                     }
                 }, {
                     include: [ models.storage ] 
                 }, {transaction: t})
+                    .then(async () => {
+                        let checkBucketExists = await minioClient.bucketExists(nameBucket)
+                        if(!checkBucketExists) {
+                            await minioClient.makeBucket(nameBucket, 'us-east-1')
+                        } else {
+                            return res.status(500).json({code: 500, message: "Nhóm đã tồn tại !"})
+                        }
+                    })
             }).then(() => {
                 return res.status(200).json({code: 200, message: "Thêm mới thành công !"})
             }).catch(error => {

@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     email: DataTypes.STRING,
     password: DataTypes.STRING,
     role_id: DataTypes.INTEGER,
+    role_group_id: DataTypes.INTEGER,
     storage_id: DataTypes.INTEGER,
     active: DataTypes.BOOLEAN
   }, {});
@@ -18,6 +19,9 @@ module.exports = (sequelize, DataTypes) => {
     })
     User.belongsTo(models.role, {
       foreignKey: 'role_id',
+    })
+    User.belongsTo(models.rolegroup, {
+      foreignKey: 'role_group_id',
     })
   };
   return User;

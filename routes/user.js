@@ -13,7 +13,7 @@ router.get('/lists', async function(req, res, next) {
             order: [
                 ['name', 'ASC']
             ], 
-            include: [ models.role ]
+            include: [ models.role, models.rolegroup ]
         })
         if(!userList) {
             return res.status(404).json({code: 404, message: "Not found user"})
@@ -28,7 +28,7 @@ router.get('/info', async function(req, res, next) {
     try {
         var userInfo = await models.User.findOne({
             attributes: { exclude: ['password'] },
-            include: [models.role],
+            include: [models.role, models.rolegroup],
             where: {id: req.query.id}
         }) 
         if(!userInfo) {
@@ -116,11 +116,13 @@ router.post('/add', async function(req, res, next) {
             return res.status(409).json({code: 409, message: "Email đã được sử dụng"})
         } else {
             var password = await bcrypt.hash(req.body.password, 10)
+            var roleGroup = await models.rolegroup.findOne({ where: {code: 'READ'} })
             models.sequelize.transaction(t => {
                 return models.User.create({
                     name: req.body.name,
                     email: email,
                     role_id: req.body.role_id,
+                    role_group_id: req.body.role_code == 'Group' ? roleGroup.dataValues.id : null,
                     active: req.body.active,
                     password: password
                 }, {transaction: t})
@@ -149,6 +151,30 @@ router.post('/update/:userId', async function(req, res, next) {
             if(req.body.password) {
                 var password = await bcrypt.hash(req.body.password, 10)
                 info['password'] = password
+            }
+            models.sequelize.transaction(t => {
+                return checkUser.update(info, {transaction: t})
+            }).then(() => {
+                return res.status(200).json({code: 200, message: "Cập nhật thành công !"})
+            }).catch(err => {
+                return res.status(500).json({code: 500, message: "Cập nhật thất bại !", body: {err}})
+            })
+        } else {
+            return res.status(404).json({code: 404, message: "Không tồn tại người dùng !"})
+        }
+    } catch(e) {
+        return res.status(500).json({code: 500, message: "Cập nhật thất bại !", body: {e}})
+    }
+})
+
+//cập nhật 1 role group cho user
+router.post('/update/rolegroup/:userId', async function(req, res, next) {
+    try {
+        var checkUser = await models.User.findOne({ where: {id: req.params.userId} })
+        if(checkUser) {
+            var code = await models.rolegroup.findOne({ where: {code: req.body.code} })
+            var info = {
+                role_group_id: code.dataValues.id
             }
             models.sequelize.transaction(t => {
                 return checkUser.update(info, {transaction: t})

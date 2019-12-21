@@ -25,11 +25,12 @@ router.post('/', [
     }
     try {
         var email = req.body.email
-        models.User.findOne({where: {email: email}, include: [{model: models.UserToken, as: 'userDetails'}, {model: models.role}, {model: models.storage}]})
+        models.User.findOne({where: {email: email}, include: [{model: models.UserToken, as: 'userDetails'}, models.role, models.storage, models.rolegroup]})
             .then( async (result) => {
                 if(!result) {
                     return res.status(500).json({code: 500, message: "Email don't exists"})
-                } else {       
+                } else {   
+                    var roleUser = result.role.dataValues.code
                     var data = result.dataValues
                     var user_token_detail = data.userDetails.length > 0 ? (data.userDetails)[0] : data.userDetails
                     var bcrypt_password = await bcrypt.compare(req.body.password, data.password)
@@ -39,6 +40,7 @@ router.post('/', [
                             name: data.name,
                             email:data.email,
                             role: data.role.dataValues.code,
+                            rolegroup: result.rolegroup ? result.rolegroup.dataValues.code : null,
                             password: data.password
                         };
                         const tokenOptions = {
@@ -58,7 +60,6 @@ router.post('/', [
                                     switch (err.name) {
                                         case "JsonWebTokenError":
                                             return res.status(500).json({code: 500, message: "Invalid refresh token", body: {err}})
-                                            break;
                                         case "TokenExpiredError":
                                             models.sequelize.transaction(t => {
                                                 return user_token_detail.update({token: token, refresh_token: refreshToken, invoked: false}, {transaction: t})
@@ -71,8 +72,7 @@ router.post('/', [
                                             })
                                             break
                                         default:
-                                            return res.status(500).json({code: 500, message: "Error", body: {err}})
-                                            break      
+                                            return res.status(500).json({code: 500, message: "Error", body: {err}})      
                                     }
                                 } else {
                                     models.sequelize.transaction(t => {
@@ -87,7 +87,11 @@ router.post('/', [
                                 }
                             })    
                         } else {
-                            var nameBucket = crypto.createHmac('md5', data.email).digest('hex');
+                            if(roleUser != 'Group') {
+                                var nameBucket = crypto.createHmac('md5', data.email).digest('hex');
+                            } else {
+                                var nameBucket = result.storage.dataValues.name
+                            }
                             models.sequelize.transaction(t => {
                                 return models.UserToken.create({
                                     token: token,
@@ -96,23 +100,25 @@ router.post('/', [
                                     invoked: false,
                                 }, {transaction: t})
                                 .then(async () => {
-                                    let checkBucketExists = await minioClient.bucketExists(nameBucket)
-                                    if(!checkBucketExists) {
-                                        return models.storage.create({
-                                            name: nameBucket,
-                                        }, {transaction: t})
-                                        .then((storage) => {
-                                            return result.update({
-                                                    storage_id: storage.id,
-                                                    active: true
-                                                }, {transaction: t})
-                                                .then(async () => {
-                                                    await minioClient.makeBucket(nameBucket, 'us-east-1')
-                                                    /* shell.exec(cmdMinio.createPolicy('local'))
-                                                    shell.exec(cmdMinio.createUser('local', data.email, data.password))
-                                                    shell.exec(cmdMinio.setUserPolicy('local', data.email)) */
-                                                })
-                                        })
+                                    if(roleUser != 'Group') {
+                                        let checkBucketExists = await minioClient.bucketExists(nameBucket)
+                                        if(!checkBucketExists) {
+                                            return models.storage.create({
+                                                name: nameBucket,
+                                            }, {transaction: t})
+                                            .then((storage) => {
+                                                return result.update({
+                                                        storage_id: storage.id,
+                                                        active: true
+                                                    }, {transaction: t})
+                                                    .then(async () => {
+                                                        await minioClient.makeBucket(nameBucket, 'us-east-1')
+                                                        /* shell.exec(cmdMinio.createPolicy('local'))
+                                                        shell.exec(cmdMinio.createUser('local', data.email, data.password))
+                                                        shell.exec(cmdMinio.setUserPolicy('local', data.email)) */
+                                                    })
+                                            })
+                                        }
                                     }
                                 })
                             }).then(() => {

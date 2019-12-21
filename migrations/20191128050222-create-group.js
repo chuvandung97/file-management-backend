@@ -13,15 +13,17 @@ module.exports = {
         unique: true,
         type: Sequelize.STRING
       },
-      member_amount: {
-        defaultValue: 0,
-        type: Sequelize.INTEGER
-      },
       storage_id: {
         type: Sequelize.INTEGER
       },
       description: {
         type: Sequelize.STRING(250)
+      },
+      created_by: {
+        type: Sequelize.INTEGER
+      },
+      updated_by: {
+        type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,

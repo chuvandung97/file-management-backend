@@ -2,9 +2,10 @@
 module.exports = (sequelize, DataTypes) => {
   const Group = sequelize.define('group', {
     name: DataTypes.STRING,
-    member_amount: DataTypes.INTEGER,
     storage_id: DataTypes.INTEGER,
-    description: DataTypes.STRING
+    description: DataTypes.STRING,
+    created_by: DataTypes.INTEGER,
+    updated_by: DataTypes.INTEGER
   }, {});
   Group.associate = function(models) {
     Group.belongsTo(models.storage, {

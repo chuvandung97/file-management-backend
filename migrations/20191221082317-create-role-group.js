@@ -1,38 +1,23 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Users', {
+    return queryInterface.createTable('RoleGroups', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      code: {
+        allowNull: false,
+        type: Sequelize.STRING
+      },
       name: {
         allowNull: false,
         type: Sequelize.STRING
       },
-      email: {
-        allowNull: false,
-        unique: true,
-        type: Sequelize.STRING
-      },
-      password: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
-      role_id: {
-        type: Sequelize.INTEGER
-      },
-      role_group_id: {
-        type: Sequelize.INTEGER
-      },
-      storage_id: {
-        type: Sequelize.INTEGER
-      },
-      active: {
-        defaultValue: false,
-        type: Sequelize.BOOLEAN
+      description: {
+        type: Sequelize.STRING(250)
       },
       createdAt: {
         allowNull: false,
@@ -45,6 +30,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('Users');
+    return queryInterface.dropTable('RoleGroups');
   }
 };
