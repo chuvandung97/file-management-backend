@@ -11,8 +11,8 @@ module.exports = {
       name: {
         type: Sequelize.STRING
       },
-      type: {
-        type: Sequelize.STRING
+      type_id: {
+        type: Sequelize.INTEGER
       },
       size: {
         type: Sequelize.STRING

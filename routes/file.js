@@ -5,6 +5,7 @@ var minioClient = require('../config/minio');
 const models = require('../models')
 var upload = Multer({dest: "./uploads/"})
 const fs   = require('fs');
+var path = require('path')
 
 //upload.any() up nhieu file
 router.post('/upload', upload.single("file"), function(req, res) {
@@ -28,10 +29,15 @@ router.post('/upload', upload.single("file"), function(req, res) {
             }
             let folder_id = req.query.folder_id ? req.query.folder_id : null
             let folderName = await models.folder.findOne({ where: { id: folder_id} })   
+            let extensionId = await models.filetype.findOne({ 
+                attributes: ['id'],
+                where: {extension: path.extname(req.file.originalname).toLowerCase()},
+                include: [models.filetypedetail] 
+            })
             models.sequelize.transaction(t => {
                 return models.file.create({
                     name: req.file.originalname,
-                    type: req.file.mimetype,
+                    type_id: extensionId.dataValues.filetypedetail.dataValues.id,
                     size: req.file.size,
                     storage_id: storage.dataValues.id,
                     created_by: req.query.created_by,
@@ -83,9 +89,14 @@ router.post('/upload/replace/:fileId', upload.single("file"), function(req, res)
             let fileId = req.params.fileId
             let checkFile = await models.file.findOne({ where: { id: fileId } })
             let user_id = req.query.updated_by
+            let extensionId = await models.filetype.findOne({ 
+                attributes: ['id'],
+                where: {extension: path.extname(req.file.originalname).toLowerCase()},
+                include: [models.filetypedetail] 
+            })
             let file_history = {
                 name: checkFile.dataValues.name,
-                type: checkFile.dataValues.type,
+                type_id: checkFile.dataValues.type_id,
                 size: checkFile.dataValues.size,
                 version: null,
                 file_id: fileId,
@@ -97,7 +108,7 @@ router.post('/upload/replace/:fileId', upload.single("file"), function(req, res)
             models.sequelize.transaction(t => {
                 return checkFile.update({
                     name: req.file.originalname,
-                    type: req.file.mimetype,
+                    type_id: extensionId.dataValues.filetypedetail.dataValues.id,
                     size: req.file.size,
                     storage_id: checkFile.dataValues.storage_id,
                     created_by: req.query.created_by,
@@ -140,7 +151,7 @@ router.get('/lists/parentfolder', async function(req, res, next) {
                 where: { id: req.query.folder_id },
                 required: true
             },  
-                {model: models.User}, {model: models.filehistory, include: [models.User]}
+                {model: models.User}, {model: models.filetypedetail}, {model: models.filehistory, include: [models.User, models.filetypedetail]}
             ],
         })
         if(!fileList) {
@@ -148,6 +159,56 @@ router.get('/lists/parentfolder', async function(req, res, next) {
         } else {
             return res.status(200).json({code: 200, message: "Success", body: {file_list: fileList}})
         }
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
+//lấy danh sách các loại file
+router.get('/lists/type', async function(req, res, next) {
+    try {
+        var typeList = await models.filetype.findAll({attributes: ['id', 'extension']})
+        if(!typeList) {
+            return res.status(404).json({code: 404, message: "Loại file không tồn tại"})
+        } else {
+            return res.status(200).json({code: 200, message: "Success", body: {type_list: typeList}})
+        }
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
+//lấy danh sách chi tiết các loại file được tải lên
+router.get('/lists/detailtype', async function(req, res, next) {
+    try {
+        var detailTypeList = await models.filetypedetail.findAll({
+            include: [ { model: models.filetype, attributes: { exclude: ['createdAt', 'updatedAt'] }} ]
+        })
+        if(!detailTypeList) {
+            return res.status(404).json({code: 404, message: "Chi tiết loại file không tồn tại"})
+        } else {
+            return res.status(200).json({code: 200, message: "Success", body: {detail_type_list: detailTypeList}})
+        }
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
+//Thêm mới loại file được tải lên
+router.post('/add/detailtype', async function(req, res, next) {
+    try {
+        models.sequelize.transaction(t => {
+            return models.filetypedetail.create({
+                type_id: req.body.type_id,
+                icon: req.body.icon,
+                color: req.body.color
+            }, {transaction: t})
+        })
+        .then(() => {
+            return res.status(200).json({code: 200, message: "Thêm mới thành công !"})
+        }).catch(err => {
+            return res.status(500).json({code: 500, message: "Thêm mới thất bại !", body: {err}})
+        })
     } catch (error) {
         return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
     }

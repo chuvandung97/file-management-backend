@@ -1,34 +1,21 @@
 'use strict';
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Files', {
+    return queryInterface.createTable('FileTypeDetails', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      name: {
-        type: Sequelize.STRING
-      },
       type_id: {
         type: Sequelize.INTEGER
       },
-      size: {
+      icon: {
         type: Sequelize.STRING
       },
-      storage_id: {
-        type: Sequelize.INTEGER
-      },
-      active: {
-        defaultValue: true,
-        type: Sequelize.BOOLEAN
-      },
-      created_by: {
-        type: Sequelize.INTEGER
-      },
-      updated_by: {
-        type: Sequelize.INTEGER
+      color: {
+        type: Sequelize.STRING
       },
       createdAt: {
         allowNull: false,
@@ -41,6 +28,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('Files');
+    return queryInterface.dropTable('FileTypeDetails');
   }
 };

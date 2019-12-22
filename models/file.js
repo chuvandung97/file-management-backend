@@ -2,7 +2,7 @@
 module.exports = (sequelize, DataTypes) => {
   const File = sequelize.define('file', {
     name: DataTypes.STRING,
-    type: DataTypes.STRING,
+    type_id: DataTypes.INTEGER,
     size: DataTypes.STRING,
     storage_id: DataTypes.INTEGER,
     active: {
@@ -12,44 +12,6 @@ module.exports = (sequelize, DataTypes) => {
     created_by: DataTypes.INTEGER,
     updated_by: DataTypes.INTEGER
   }, {});
-  File.beforeCreate((file, option) => {
-    switch (file.type) {
-      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-        return file.type = 'application/docx'
-      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.template':
-        return file.type = 'application/dotx'
-      case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-        return file.type = 'application/xlsx'
-      case 'application/vnd.ms-excel':
-        return file.type = 'application/msexcel'
-      case 'application/vnd.ms-powerpoint':
-        return file.type = 'application/mspowerpoint'
-      case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
-        return file.type = 'application/pptx'
-      default:
-        return file.type
-    }
-  });
-
-  File.beforeUpdate((file, option) => {
-    switch (file.type) {
-      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-        return file.type = 'application/docx'
-      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.template':
-        return file.type = 'application/dotx'
-      case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-        return file.type = 'application/xlsx'
-      case 'application/vnd.ms-excel':
-        return file.type = 'application/msexcel'
-      case 'application/vnd.ms-powerpoint':
-        return file.type = 'application/mspowerpoint'
-      case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
-        return file.type = 'application/pptx'
-      default:
-        return file.type
-    }
-  });
-
   File.associate = function(models) {
     File.belongsTo(models.User, {
       foreignKey: 'created_by'
@@ -78,6 +40,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'file_id',
       onDelete: 'CASCADE',
       hooks: true,
+    }),
+
+    File.belongsTo(models.filetypedetail, {
+      foreignKey: 'type_id',
     })
   };
   return File;

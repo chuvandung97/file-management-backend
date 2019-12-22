@@ -2,7 +2,7 @@
 module.exports = (sequelize, DataTypes) => {
   const FileHistory = sequelize.define('filehistory', {
     name: DataTypes.STRING,
-    type: DataTypes.STRING,
+    type_id: DataTypes.INTEGER,
     size: DataTypes.STRING,
     version:  DataTypes.STRING,
     file_id: DataTypes.INTEGER,
@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
   FileHistory.associate = function(models) {
     FileHistory.belongsTo(models.User, {
       foreignKey: 'updated_by',
+    })
+
+    FileHistory.belongsTo(models.filetypedetail, {
+      foreignKey: 'type_id',
     })
   };
   return FileHistory;

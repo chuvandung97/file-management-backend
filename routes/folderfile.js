@@ -20,7 +20,7 @@ router.get('/lists', async function(req, res, next) {
                 storage_id: storageId,
                 active: active
             },
-            include: [{model: models.folder}, {model: models.User}, {model: models.filehistory, include: [models.User]}],
+            include: [{model: models.folder}, {model: models.User}, {model: models.filetypedetail}, {model: models.filehistory, include: [models.User, models.filetypedetail]}],
             order: [
                 [models.filehistory, 'updatedAt','desc']
             ]
