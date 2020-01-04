@@ -41,6 +41,29 @@ router.get('/lists/subfolder', async function(req, res, next) {
     }
 })
 
+//lấy thông tin của folder đc chỉ định
+router.get('/info/:folderId', async function(req, res, next) {
+    try {
+        var folderInfo = await models.folder.findOne({
+            where: {
+                id: req.params.folderId,
+            },
+            include: [{ model: models.folder, as: 'parent', include: {
+                model: models.folder, as: 'parent', include: {
+                    model: models.folder, as: 'parent', include: {
+                        model: models.folder, as: 'parent', include: {
+                            model: models.folder, as: 'parent'
+                        }
+                    }
+                }
+            }}],
+        })
+        return res.status(200).json({code: 200, message: "Success", body: {folder_info: folderInfo}})
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
 //tạo mới 1 folder
 router.post('/add', async function(req, res, next) {
     try {
