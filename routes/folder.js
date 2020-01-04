@@ -41,6 +41,21 @@ router.get('/lists/subfolder', async function(req, res, next) {
     }
 })
 
+//lấy danh sách các folder log
+router.get('/lists/log/:folderId', async function(req, res, next) {
+    try {
+        var logList = await models.folderlog.findAll({ 
+            where: {folder_id: req.params.folderId},
+            order: [
+                ['createdAt', 'DESC']
+            ], 
+        })
+        return res.status(200).json({code: 200, message: "Success", body: {log_list: logList}})
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
 //lấy thông tin của folder đc chỉ định
 router.get('/info/:folderId', async function(req, res, next) {
     try {
@@ -84,7 +99,7 @@ router.post('/add', async function(req, res, next) {
                 created_by: req.body.created_by,
                 active: true,
                 folderlogs: [{
-                    log: 'at ' + (parentFolderName ? parentFolderName.dataValues.name : 'Drive'),
+                    log: 'at ' + (parentFolderName ? parentFolderName.dataValues.name : 'Kho của tôi'),
                     action: 'created',
                     updated_by: req.body.updated_by
                 }]

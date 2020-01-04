@@ -42,7 +42,7 @@ router.post('/upload', upload.single("file"), function(req, res) {
                     storage_id: storage.dataValues.id,
                     created_by: req.query.created_by,
                     filelogs: [{
-                        log: 'at ' + (folderName ? folderName.dataValues.name : 'Drive'),
+                        log: 'at ' + (folderName ? folderName.dataValues.name : 'Kho của tôi'),
                         action: 'created',
                         updated_by: req.query.updated_by
                     }]
@@ -194,6 +194,21 @@ router.get('/lists/detailtype', async function(req, res, next) {
     }
 })
 
+//lấy danh sách các file log
+router.get('/lists/log/:fileId', async function(req, res, next) {
+    try {
+        var logList = await models.filelog.findAll({ 
+            where: {file_id: req.params.fileId},
+            order: [
+                ['createdAt', 'DESC']
+            ], 
+        })
+        return res.status(200).json({code: 200, message: "Success", body: {log_list: logList}})
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
+    }
+})
+
 //Thêm mới loại file được tải lên
 router.post('/add/detailtype', async function(req, res, next) {
     try {
@@ -325,7 +340,7 @@ router.post('/move/:fileId', async function(req, res, next) {
                 }, {transaction: t})
                     .then(() => {
                         return models.filelog.create({
-                            log: 'Drive to ' + newFolderName.dataValues.name,
+                            log: 'Kho của tôi to ' + newFolderName.dataValues.name,
                             file_id: fileId,
                             action: 'moved',
                             updated_by: req.body.user_id
