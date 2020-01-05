@@ -10,6 +10,9 @@ module.exports = (sequelize, DataTypes) => {
     FileLog.belongsTo(models.file, {
       foreignKey: 'file_id',
     })
+    FileLog.belongsTo(models.User, {
+      foreignKey: 'updated_by',
+    })
   };
   return FileLog;
 };

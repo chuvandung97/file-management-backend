@@ -7,7 +7,12 @@ module.exports = (sequelize, DataTypes) => {
     updated_by: DataTypes.INTEGER
   }, {});
   FolderLog.associate = function(models) {
-    // associations can be defined here
+    FolderLog.belongsTo(models.User, {
+      foreignKey: 'updated_by',
+    })
+    FolderLog.belongsTo(models.folder, {
+      foreignKey: 'folder_id',
+    })
   };
   return FolderLog;
 };

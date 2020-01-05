@@ -42,7 +42,7 @@ router.post('/upload', upload.single("file"), function(req, res) {
                     storage_id: storage.dataValues.id,
                     created_by: req.query.created_by,
                     filelogs: [{
-                        log: 'at ' + (folderName ? folderName.dataValues.name : 'Kho của tôi'),
+                        log: 'trong ' + (folderName ? folderName.dataValues.name : 'Kho của tôi'),
                         action: 'created',
                         updated_by: req.query.updated_by
                     }]
@@ -115,7 +115,7 @@ router.post('/upload/replace/:fileId', upload.single("file"), function(req, res)
                 }, {transaction: t})
                     .then((file) => {
                         return models.filelog.create({
-                            log: oldfileName + ' to ' + file.name,
+                            log: 'từ ' + oldfileName + ' thành ' + file.name,
                             file_id: fileId,
                             action: 'replaced',
                             updated_by: user_id
@@ -202,6 +202,7 @@ router.get('/lists/log/:fileId', async function(req, res, next) {
             order: [
                 ['createdAt', 'DESC']
             ], 
+            include: [models.User]
         })
         return res.status(200).json({code: 200, message: "Success", body: {log_list: logList}})
     } catch (error) {
@@ -244,7 +245,7 @@ router.post('/update/:fileId', async function(req, res, next) {
                 }, {transaction: t})
                 .then((file) => {
                     return models.filelog.create({
-                        log: old_name + ' to ' + new_name,
+                        log: 'từ ' + old_name + ' thành ' + new_name,
                         file_id: file.dataValues.id,
                         action: 'renamed',
                         updated_by: user_id
@@ -274,9 +275,9 @@ router.post('/remove/trash/:fileId', async function(req, res, next) {
                 }, {transaction: t})
                 .then((file) => {
                     return models.filelog.create({
-                        log: 'true to false',
+                        log: 'vào thùng rác',
                         file_id: file.dataValues.id,
-                        action: 'changedActive',
+                        action: 'deleted',
                         updated_by: req.body.user_id
                     }, {transaction: t})
                 })
@@ -306,9 +307,9 @@ router.post('/restore', async function(req, res, next) {
                     let filelog = []
                     for (let fileId of fileIds) {
                         filelog.push({
-                            log: 'false to true', 
+                            log: 'từ thùng rác', 
                             file_id: fileId, 
-                            action: 'changedActive', 
+                            action: 'restored', 
                             updated_by: req.body.user_id
                         })
                     }
@@ -340,7 +341,7 @@ router.post('/move/:fileId', async function(req, res, next) {
                 }, {transaction: t})
                     .then(() => {
                         return models.filelog.create({
-                            log: 'Kho của tôi to ' + newFolderName.dataValues.name,
+                            log: 'từ Kho của tôi tới ' + newFolderName.dataValues.name,
                             file_id: fileId,
                             action: 'moved',
                             updated_by: req.body.user_id
@@ -359,7 +360,7 @@ router.post('/move/:fileId', async function(req, res, next) {
                     {transaction: t})
                     .then(() => {
                         return models.filelog.create({
-                            log: oldFolderName.dataValues.name + ' to ' + newFolderName.dataValues.name,
+                            log: 'từ ' + oldFolderName.dataValues.name + ' tới ' + newFolderName.dataValues.name,
                             file_id: fileId,
                             action: 'moved',
                             updated_by: req.body.user_id

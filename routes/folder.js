@@ -49,6 +49,7 @@ router.get('/lists/log/:folderId', async function(req, res, next) {
             order: [
                 ['createdAt', 'DESC']
             ], 
+            include: [models.User]
         })
         return res.status(200).json({code: 200, message: "Success", body: {log_list: logList}})
     } catch (error) {
@@ -99,7 +100,7 @@ router.post('/add', async function(req, res, next) {
                 created_by: req.body.created_by,
                 active: true,
                 folderlogs: [{
-                    log: 'at ' + (parentFolderName ? parentFolderName.dataValues.name : 'Kho của tôi'),
+                    log: 'trong ' + (parentFolderName ? parentFolderName.dataValues.name : 'Kho của tôi'),
                     action: 'created',
                     updated_by: req.body.updated_by
                 }]
@@ -128,7 +129,7 @@ router.post('/update/:folderId', async function(req, res, next) {
                 }, {transaction: t})
                 .then((folder) => {
                     return models.folderlog.create({
-                        log: old_name + ' to ' + new_name,
+                        log: 'từ ' + old_name + ' thành ' + new_name,
                         folder_id: folder.dataValues.id,
                         action: 'renamed',
                         updated_by: user_id
@@ -158,9 +159,9 @@ router.post('/remove/trash/:folderId', async function(req, res, next) {
                 }, {transaction: t})
                 .then((folder) => {
                     return models.folderlog.create({
-                        log: 'true to false',
+                        log: 'vào thùng rác',
                         folder_id: folder.dataValues.id,
-                        action: 'changedActive',
+                        action: 'deleted',
                         updated_by: req.body.user_id
                     }, {transaction: t})
                 })
@@ -190,9 +191,9 @@ router.post('/restore', async function(req, res, next) {
                 let folderlog = []
                 for (let folderId of folderIds) {
                     folderlog.push({
-                        log: 'false to true', 
+                        log: 'từ thùng rác', 
                         folder_id: folderId, 
-                        action: 'changedActive', 
+                        action: 'restored', 
                         updated_by: req.body.user_id
                     })
                 }
@@ -221,7 +222,7 @@ router.post('/move/:folderId', async function(req, res, next) {
                 {transaction: t})
                 .then(() => {
                     return models.folderlog.create({
-                        log: 'To ' + newFolderName.dataValues.name,
+                        log: 'tới ' + newFolderName.dataValues.name,
                         folder_id: oldFolderId,
                         action: 'moved',
                         updated_by: req.body.user_id
