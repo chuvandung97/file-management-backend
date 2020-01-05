@@ -22,7 +22,8 @@ router.get('/lists', async function(req, res, next) {
             },
             include: [{model: models.folder}, {model: models.User}, {model: models.filetypedetail}, {model: models.filehistory, include: [models.User, models.filetypedetail]}],
             order: [
-                [models.filehistory, 'updatedAt','desc']
+                [models.filehistory, 'updatedAt','desc'],
+                ['createdAt', 'ASC']
             ]
         })
 
@@ -42,7 +43,7 @@ router.get('/lists', async function(req, res, next) {
         let folderList = await models.folder.findAll({
             where: folderCondition,
             order: [
-                ['name', 'ASC']
+                ['createdAt', 'ASC']
             ], 
             include: [{ model: models.storage, include: [
                 models.User
