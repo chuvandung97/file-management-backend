@@ -9,9 +9,11 @@ router.get('/lists', async function(req, res, next) {
     try {
         let active = req.query.active ? req.query.active : true
         let search = req.query.search ? req.query.search : false
+        var userId = req.query.userid
         let name = req.query.name
         let size = req.query.size
         let time = req.query.time
+        var owner = req.query.owner
         let storage = await models.storage.findOne({
             attributes: ['id'],
             where: { name: req.query.storage_id }
@@ -19,14 +21,32 @@ router.get('/lists', async function(req, res, next) {
         if(!storage) {
             return res.status(404).json({code: 404, message: "Kho không tồn tại"})
         }
-        let storageId = storage.dataValues.id
-
+        if(owner && owner.includes('@gmail.com')) {
+            var userId = await models.User.findOne({
+                attributes: ['id'],
+                where: { email: owner }
+            })
+        } 
+        
         var fileCondition = {
-            storage_id: storageId,
+            storage_id: storage.dataValues.id,
             active: active
         }
         if(name) {
             fileCondition.name = { [Op.substring]: name }
+        }
+        if(owner) {
+            switch (owner) {
+                case 'me':
+                    fileCondition.created_by = { [Op.eq]: userId }
+                    break;
+                case 'notme':
+                    fileCondition.created_by = { [Op.ne]: userId }
+                    break
+                default:
+                    fileCondition.created_by = { [Op.eq]: userId.dataValues.id }
+                    break;
+            }
         }
         if(size) {
             let sizeArr = size.split(':')
@@ -69,7 +89,7 @@ router.get('/lists', async function(req, res, next) {
             var folderCondition = fileCondition
         } else {
             var folderCondition = {
-                storage_id: storageId,
+                storage_id: storage.dataValues.id,
                 parent_id: req.query.parent_id ? req.query.parent_id : null,
                 active: active
             }
