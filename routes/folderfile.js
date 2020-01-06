@@ -7,7 +7,7 @@ const Op = Sequelize.Op
 //danh sách folder và file  
 router.get('/lists', async function(req, res, next) {
     try {
-        let active = req.query.active 
+        let active = req.query.active ? req.query.active : true
         let search = req.query.search ? req.query.search : false
         let name = req.query.name
         let size = req.query.size
@@ -23,7 +23,7 @@ router.get('/lists', async function(req, res, next) {
 
         var fileCondition = {
             storage_id: storageId,
-            active: active,
+            active: active
         }
         if(name) {
             fileCondition.name = { [Op.substring]: name }
