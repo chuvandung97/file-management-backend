@@ -9,7 +9,7 @@ router.get('/lists', async function(req, res, next) {
             order: [
                 ['order', 'ASC']
             ], 
-            include: [{model: models.menu, as: 'childMenu'}]
+            include: [{model: models.menu, as: 'childMenu'}, {model: models.menu, as: 'parentMenu'}]
         })
         if(!menuList) {
             return res.status(404).json({code: 404, message: "Chức năng không tồn tại"})
