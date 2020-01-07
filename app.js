@@ -18,6 +18,7 @@ var menuRouter = require('./routes/menu')
 var folderRouter = require('./routes/folder')
 var fileRouter = require('./routes/file')
 var folderFileRouter = require('./routes/folderfile')
+var fileTypeDetailRouter = require('./routes/filetypedetail')
 
 var app = express();
 
@@ -46,6 +47,7 @@ app.use('/menus', menuRouter)
 app.use('/folders', folderRouter)
 app.use('/files', fileRouter)
 app.use('/folderfiles', folderFileRouter)
+app.use('/filetypedetails', fileTypeDetailRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

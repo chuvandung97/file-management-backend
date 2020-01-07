@@ -210,26 +210,6 @@ router.get('/lists/log/:fileId', async function(req, res, next) {
     }
 })
 
-//Thêm mới loại file được tải lên
-router.post('/add/detailtype', async function(req, res, next) {
-    try {
-        models.sequelize.transaction(t => {
-            return models.filetypedetail.create({
-                type_id: req.body.type_id,
-                icon: req.body.icon,
-                color: req.body.color
-            }, {transaction: t})
-        })
-        .then(() => {
-            return res.status(200).json({code: 200, message: "Thêm mới thành công !"})
-        }).catch(err => {
-            return res.status(500).json({code: 500, message: "Thêm mới thất bại !", body: {err}})
-        })
-    } catch (error) {
-        return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
-    }
-})
-
 //đổi tên file
 router.post('/update/:fileId', async function(req, res, next) {
     try {
