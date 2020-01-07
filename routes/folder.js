@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var models = require('../models')
+var Sequelize = require('sequelize')
+const Op = Sequelize.Op
 
 //lấy danh sách tất cả folder con của folder cha đc chỉ định
 router.get('/lists/subfolder', async function(req, res, next) {
@@ -238,14 +240,28 @@ router.post('/move/:folderId', async function(req, res, next) {
     }
 })
 
-router.delete('/delete', function(req, res, next) {
+router.delete('/delete', async function(req, res, next) {
     try {
+        let fileIdList = await models.folderfile.findAll({
+            attributes: ['file_id'],
+            where: {
+                folder_id: {
+                    [Op.or]: req.query.folderIds
+                }
+            }
+        })
+        let fileIds = fileIdList.map(el => el.dataValues.file_id)
         models.sequelize.transaction(t => {
             return models.folder.destroy({ 
                 where: {id: req.query.folderIds },
             }, {transaction: t})
-        }).then(affectedRows => {
-            return res.status(200).json({code: 200, message: "Xoá thành công ", count: affectedRows})
+            .then(() => {
+                return models.file.destroy({
+                    where: {id: fileIds}
+                }, {transaction: t})
+            })
+        }).then(() => {
+            return res.status(200).json({code: 200, message: "Xoá thành công !"})
         }).catch(err => {
             return res.status(500).json({code: 500, message: "Xóa thất bại !", body: {err}})
         })

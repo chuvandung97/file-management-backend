@@ -143,7 +143,7 @@ router.get('/lists/parentfolder', async function(req, res, next) {
                 active: req.query.active
             },
             order: [
-                ['name', 'ASC'],
+                ['createdAt', 'ASC'],
                 [models.filehistory, 'updatedAt','desc']
             ], 
             include: [{ 
