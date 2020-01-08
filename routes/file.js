@@ -10,9 +10,10 @@ var path = require('path')
 //upload.any() up nhieu file
 router.post('/upload', upload.single("file"), function(req, res) {
     var metaData = {
-        'Content-Type': 'image/*, audio/*, application/*, font/*, text/*, video/*',
-    } 
-    minioClient.fPutObject(req.query.bucket_name, req.file.originalname, req.file.path, metaData, async function(err, etag) {
+        'Content-Type': req.file.mimetype,
+    }
+    let objectName = req.query.folder_arr + '/' + req.file.originalname
+    minioClient.fPutObject(req.query.bucket_name, objectName, req.file.path, metaData, async function(err, etag) {
         if(err) {
             return res.status(500).json({ code: 500, message: "Tải lên thất bại !", body: {err} });
         }
@@ -63,7 +64,7 @@ router.post('/upload', upload.single("file"), function(req, res) {
         } catch (error) {
             return res.status(500).json({code: 500, message: "Lỗi server !", body: {err}})
         }
-    });
+    }); 
 });
 
 router.get('/download', function(req, res) {
