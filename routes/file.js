@@ -12,7 +12,12 @@ router.post('/upload', upload.single("file"), function(req, res) {
     var metaData = {
         'Content-Type': req.file.mimetype,
     }
-    let objectName = req.query.folder_arr + '/' + req.file.originalname
+    if(req.query.folder_arr) {
+        var objectName = req.query.folder_arr + '/' + req.file.originalname
+    }
+    else {
+        var objectName = req.file.originalname
+    }
     minioClient.fPutObject(req.query.bucket_name, objectName, req.file.path, metaData, async function(err, etag) {
         if(err) {
             return res.status(500).json({ code: 500, message: "Tải lên thất bại !", body: {err} });
