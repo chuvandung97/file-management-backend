@@ -3,6 +3,7 @@ var router = express.Router();
 var models = require('../models')
 var Sequelize = require('sequelize')
 const Op = Sequelize.Op
+const compact = require('../compactNameFolderFile')
 
 //danh sách folder và file  
 router.get('/lists', async function(req, res, next) {
@@ -117,6 +118,8 @@ router.get('/lists', async function(req, res, next) {
                 } }, {model: models.User}],
             })
         }
+        folderList = compact.compactName(folderList)
+        fileList = compact.compactName(fileList)
         if(active == 1 && !search) {
             var folderFileList = folderList.concat(fileList.filter(el => el.folders == 0))
         } else {

@@ -1,6 +1,7 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
   const FileHistory = sequelize.define('filehistory', {
+    origin_name: DataTypes.STRING,
     name: DataTypes.STRING,
     type_id: DataTypes.INTEGER,
     size: DataTypes.STRING,

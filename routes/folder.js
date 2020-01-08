@@ -3,6 +3,7 @@ var router = express.Router();
 var models = require('../models')
 var Sequelize = require('sequelize')
 const Op = Sequelize.Op
+const compact = require('../compactNameFolderFile')
 
 //lấy danh sách tất cả folder con của folder cha đc chỉ định
 router.get('/lists/subfolder', async function(req, res, next) {
@@ -36,7 +37,7 @@ router.get('/lists/subfolder', async function(req, res, next) {
         if(!folderList) {
             return res.status(404).json({code: 404, message: "Thư mục không tồn tại"})
         } else {
-            return res.status(200).json({code: 200, message: "Success", body: {folder_list: folderList}})
+            return res.status(200).json({code: 200, message: "Success", body: {folder_list: compact.compactName(folderList)}})
         }
     } catch (error) {
         return res.status(500).json({code: 500, message: "Lỗi server", body: {error}})
@@ -97,6 +98,7 @@ router.post('/add', async function(req, res, next) {
         models.sequelize.transaction(t => {
             return models.folder.create({
                 parent_id: parent_id,
+                origin_name: req.body.name,
                 name: req.body.name,
                 storage_id: storage.dataValues.id,
                 created_by: req.body.created_by,

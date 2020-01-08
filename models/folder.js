@@ -2,6 +2,7 @@
 module.exports = (sequelize, DataTypes) => {
   const Folder = sequelize.define('folder', {
     parent_id: DataTypes.INTEGER,
+    origin_name: DataTypes.STRING,
     name: DataTypes.STRING,
     storage_id: DataTypes.INTEGER,
     description: DataTypes.STRING,
@@ -12,6 +13,12 @@ module.exports = (sequelize, DataTypes) => {
     created_by: DataTypes.INTEGER,
     updated_by: DataTypes.INTEGER
   }, {});
+  Folder.beforeCreate(folder => {
+    console.log(folder)
+    let name = Date.now() + '-' + folder.origin_name
+    folder.origin_name = folder.name = name
+  })
+
   Folder.associate = function(models) {
     Folder.belongsTo(models.storage, {
       foreignKey: 'storage_id',
