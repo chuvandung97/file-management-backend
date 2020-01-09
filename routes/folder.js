@@ -125,7 +125,7 @@ router.post('/update/:folderId', async function(req, res, next) {
         let checkFolder = await models.folder.findOne({where: { id: req.params.folderId }})
         let user_id = req.body.user_id
         let old_name = checkFolder.dataValues.name
-        let new_name = req.body.name
+        let new_name = Date.now() + '-' + req.body.name
         if(checkFolder) {
             models.sequelize.transaction(t => {
                 return checkFolder.update({

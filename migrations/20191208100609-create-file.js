@@ -25,6 +25,10 @@ module.exports = {
       storage_id: {
         type: Sequelize.INTEGER
       },
+      is_star: {
+        defaultValue: false,
+        type: Sequelize.BOOLEAN
+      },
       active: {
         defaultValue: true,
         type: Sequelize.BOOLEAN

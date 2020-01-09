@@ -26,6 +26,10 @@ module.exports = {
       description: {
         type: Sequelize.STRING(250)
       },
+      is_star: {
+        defaultValue: false,
+        type: Sequelize.BOOLEAN
+      },
       active: {
         defaultValue: true,
         type: Sequelize.BOOLEAN

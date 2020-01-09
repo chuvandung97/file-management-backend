@@ -6,6 +6,10 @@ module.exports = (sequelize, DataTypes) => {
     type_id: DataTypes.INTEGER,
     size: DataTypes.STRING,
     storage_id: DataTypes.INTEGER,
+    is_star: {
+      defaultValue: false,
+      type: DataTypes.BOOLEAN
+    },
     active: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
