@@ -74,7 +74,12 @@ router.post('/upload', upload.single("file"), function(req, res) {
 });
 
 router.get('/download', function(req, res) {
-    minioClient.getObject(req.query.bucket_name, req.query.name, function(err, dataStream) {
+    let name = req.query.name
+    let folderPath = req.query.folder_path
+    if(folderPath) {
+        name = folderPath + '/' + name
+    }
+    minioClient.getObject(req.query.bucket_name, name, function(err, dataStream) {
         if (err) return res.status(500).json({ code: 500, message: "Tải xuống thất bại !", body: {err} });
         dataStream.pipe(res)
     })  
