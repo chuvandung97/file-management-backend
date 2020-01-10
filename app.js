@@ -26,29 +26,9 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use(bearerToken());
 
-/* var minioClient = require('./config/minio');
+var minioClient = require('./config/minio');
 var Minio = require('minio')
-let conds  = new Minio.CopyConditions()
-let b = conds.setMatchETag('d1ce2744609161cf3c47690796b64bc8-1')
-console.log(b)
 
-minioClient.statObject('152dbc508217e1349a45349e52b04365', 'nodejs.PNG', function(err, stat) {
-  if (err) {
-    return console.log(err)
-  }
-  console.log(stat)
-}) */
-
-/* var objectsList = []
-var objectsStream = minioClient.listObjects('152dbc508217e1349a45349e52b04365', 'ca', true)
-objectsStream.on('data', function(obj) {
-  objectsList.push(obj.name);
-})
-objectsStream.on('end', function() {
-
-  console.log(objectsList)
-
-}) */
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');

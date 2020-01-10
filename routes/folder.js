@@ -152,6 +152,28 @@ router.post('/update/:folderId', async function(req, res, next) {
     }
 })
 
+//cập nhật sao của folder
+router.post('/update/star/:folderId', async function(req, res, next) {
+    try {
+        let checkFolder = await models.folder.findOne({where: { id: req.params.folderId }})
+        if(checkFolder) {
+            models.sequelize.transaction(t => {
+                return checkFolder.update({
+                    is_star: req.body.is_star,
+                }, {transaction: t})
+            }).then(() => {
+                return res.status(200).json({code: 200, message: req.body.is_star ? 'Thêm thành công vào thư mục Có gắn dấu sao' : 'Xóa thành công khỏi thư mục Có gắn dấu sao'})
+            }).catch(err => {
+                return res.status(500).json({code: 500, message: "Thất bại !", body: {err}})
+            })
+        } else {
+            return res.status(404).json({code: 404, message: "Thư mục không tồn tại !"})
+        }
+    } catch(e) {
+        return res.status(500).json({code: 500, message: "Lỗi server !", body: {e}})
+    }
+})
+
 //di chuyển folder vào thùng rác
 router.post('/remove/trash/:folderId', async function(req, res, next) {
     try {

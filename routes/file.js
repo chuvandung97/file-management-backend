@@ -250,6 +250,28 @@ router.post('/update/:fileId', async function(req, res, next) {
     }
 })
 
+//cập nhật sao của file
+router.post('/update/star/:fileId', async function(req, res, next) {
+    try {
+        let checkFile = await models.file.findOne({where: { id: req.params.fileId }})
+        if(checkFile) {
+            models.sequelize.transaction(t => {
+                return checkFile.update({
+                    is_star: req.body.is_star,
+                }, {transaction: t})
+            }).then(() => {
+                return res.status(200).json({code: 200, message: req.body.is_star ? 'Thêm thành công vào thư mục Có gắn dấu sao' : 'Xóa thành công khỏi thư mục Có gắn dấu sao'})
+            }).catch(err => {
+                return res.status(500).json({code: 500, message: "Thất bại !", body: {err}})
+            })
+        } else {
+            return res.status(404).json({code: 404, message: "File không tồn tại !"})
+        }
+    } catch(e) {
+        return res.status(500).json({code: 500, message: "Lỗi server !", body: {e}})
+    }
+})
+
 //di chuyển file vào thùng rác
 router.post('/remove/trash/:fileId', async function(req, res, next) {
     try {
@@ -365,11 +387,17 @@ router.post('/move/:fileId', async function(req, res, next) {
 
 router.delete('/delete', async function(req, res, next) {
     try {
-        //await minioClient.removeObjects(req.query.storage, req.query.fileNames)
         models.sequelize.transaction(t => {
             return models.file.destroy({ 
                 where: {id: req.query.fileIds },
             }, {transaction: t})
+            /* .then(() => {
+                minioClient.removeObjects(req.query.storage, req.query.fileNames , function(e) {
+                    if (e) {
+                        console.log(e)
+                    }
+                })
+            }) */
         }).then(affectedRows => {
             return res.status(200).json({code: 200, message: "Xoá thành công ", count: affectedRows})
         }).catch(err => {
