@@ -10,7 +10,7 @@ router.get('/lists', async function(req, res, next) {
     try {
         let active = req.query.active ? req.query.active : true
         let search = req.query.search ? req.query.search : false
-        let is_star = req.query.is_star ? req.query.is_star : false
+        let is_star = req.query.is_star
         var userId = req.query.userid
         let name = req.query.name
         let size = req.query.size
@@ -33,7 +33,9 @@ router.get('/lists', async function(req, res, next) {
         var fileCondition = {
             storage_id: storage.dataValues.id,
             active: active,
-            is_star: is_star
+        }
+        if(is_star) {
+            fileCondition.is_star = is_star
         }
         if(name) {
             fileCondition.name = { [Op.substring]: name }
@@ -95,7 +97,6 @@ router.get('/lists', async function(req, res, next) {
                 storage_id: storage.dataValues.id,
                 parent_id: req.query.parent_id ? req.query.parent_id : null,
                 active: active,
-                is_star: is_star
             }
         }
         
