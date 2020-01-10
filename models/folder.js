@@ -18,10 +18,13 @@ module.exports = (sequelize, DataTypes) => {
     updated_by: DataTypes.INTEGER
   }, {});
   Folder.beforeCreate(folder => {
-    console.log(folder)
     let name = Date.now() + '-' + folder.origin_name
     folder.origin_name = folder.name = name
   })
+
+  /* Folder.beforeUpdate(folder => {
+    folder.name = Date.now() + '-' + folder.origin_name
+  }) */
 
   Folder.associate = function(models) {
     Folder.belongsTo(models.storage, {

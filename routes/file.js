@@ -14,10 +14,6 @@ router.post('/upload', upload.single("file"), function(req, res) {
         'Content-Type': req.file.mimetype,
     }
     var objectName = Date.now() + '-' + req.file.originalname
-    let originalName = objectName
-    if(req.query.folder_arr) {
-        objectName = req.query.folder_arr + '/' + objectName
-    }
     minioClient.fPutObject(req.query.bucket_name, objectName, req.file.path, metaData, async function(err, etag) {
         if(err) {
             return res.status(500).json({ code: 500, message: "Tải lên thất bại !", body: {err} });
@@ -37,13 +33,13 @@ router.post('/upload', upload.single("file"), function(req, res) {
             let folderName = await models.folder.findOne({ where: { id: folder_id} })   
             let extensionId = await models.filetype.findOne({ 
                 attributes: ['id'],
-                where: {extension: path.extname(originalName).toLowerCase()},
+                where: {extension: path.extname(objectName).toLowerCase()},
                 include: [models.filetypedetail] 
             })
             models.sequelize.transaction(t => {
                 return models.file.create({
-                    origin_name: originalName,
-                    name: originalName,
+                    origin_name: objectName,
+                    name: objectName,
                     type_id: extensionId.dataValues.filetypedetail.dataValues.id,
                     size: req.file.size,
                     storage_id: storage.dataValues.id,
@@ -74,12 +70,7 @@ router.post('/upload', upload.single("file"), function(req, res) {
 });
 
 router.get('/download', function(req, res) {
-    let name = req.query.name
-    let folderPath = req.query.folder_path
-    if(folderPath) {
-        name = folderPath + '/' + name
-    }
-    minioClient.getObject(req.query.bucket_name, name, function(err, dataStream) {
+    minioClient.getObject(req.query.bucket_name, req.query.name, function(err, dataStream) {
         if (err) return res.status(500).json({ code: 500, message: "Tải xuống thất bại !", body: {err} });
         dataStream.pipe(res)
     })  
@@ -91,10 +82,6 @@ router.post('/upload/replace/:fileId', upload.single("file"), function(req, res)
         'Content-Type': req.file.mimetype,
     } 
     var objectName = Date.now() + '-' + req.file.originalname
-    let originalName = objectName
-    if(req.query.folder_arr) {
-        objectName = req.query.folder_arr + '/' + objectName
-    }
     minioClient.fPutObject(req.query.bucket_name, objectName, req.file.path, metaData, async function(err, etag) {
         if(err) {
             return res.status(500).json({ code: 500, message: "Tải lên thất bại !", body: {err} });
@@ -108,7 +95,7 @@ router.post('/upload/replace/:fileId', upload.single("file"), function(req, res)
             let user_id = req.query.updated_by
             let extensionId = await models.filetype.findOne({ 
                 attributes: ['id'],
-                where: {extension: path.extname(originalName).toLowerCase()},
+                where: {extension: path.extname(objectName).toLowerCase()},
                 include: [models.filetypedetail] 
             })
             let file_history = {
@@ -125,8 +112,8 @@ router.post('/upload/replace/:fileId', upload.single("file"), function(req, res)
             let oldfileName = checkFile.dataValues.name
             models.sequelize.transaction(t => {
                 return checkFile.update({
-                    origin_name: originalName,
-                    name: originalName,
+                    origin_name: objectName,
+                    name: objectName,
                     type_id: extensionId.dataValues.filetypedetail.dataValues.id,
                     size: req.file.size,
                     storage_id: checkFile.dataValues.storage_id,
