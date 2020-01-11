@@ -10,7 +10,7 @@ router.get('/lists/subfolder', async function(req, res, next) {
     try {
         var folderList = await models.folder.findAll({
             where: {
-                parent_id: req.query.folder_id,
+                parent_id: req.query.folder_id ? req.query.folder_id : null,
                 active: true
             },
             order: [
