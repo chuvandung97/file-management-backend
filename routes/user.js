@@ -64,6 +64,30 @@ router.get('/lists/rolegroup', async function(req, res, next) {
     }
 })
 
+//lấy danh sách tất cả user mà có cùng Storage
+router.get('/lists/storage', async function(req, res, next) {
+    try {
+        var storageId = await models.storage.findOne({ 
+            attributes: ['id'],
+            where: { name: req.query.storage_name }
+        })
+        if(!storageId) {
+            return res.status(404).json({code: 404, message: "Kho không tồn tại"})
+        }
+        var userList = await models.User.findAll({
+            attributes: { exclude: ['password'] },
+            where: {storage_id : storageId.dataValues.id},
+            include: [models.rolegroup],
+            order: [
+                ['name', 'ASC']
+            ], 
+        })
+        return res.status(200).json({code: 200, message: "Success", body: {user_list: userList}})
+    } catch (error) {
+        return res.status(500).json({code: 500, message: "Lỗi server"})
+    }
+})
+
 //thêm user vào group
 router.post('/add/togroup', async function(req, res, next) {
     try {
