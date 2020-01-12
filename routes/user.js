@@ -79,7 +79,7 @@ router.get('/lists/storage', async function(req, res, next) {
             where: {storage_id : storageId.dataValues.id},
             include: [models.rolegroup],
             order: [
-                ['name', 'ASC']
+                ['role_group_id', 'ASC']
             ], 
         })
         return res.status(200).json({code: 200, message: "Success", body: {user_list: userList}})
