@@ -121,7 +121,7 @@ router.post('/upload/replace/:fileId', upload.single("file"), function(req, res)
                 }, {transaction: t})
                     .then((file) => {
                         return models.filelog.create({
-                            log: 'từ ' + oldfileName + ' thành ' + file.name,
+                            log: 'từ ' + oldfileName.slice(14) + ' thành ' + file.name.slice(14),
                             file_id: fileId,
                             action: 'replaced',
                             updated_by: user_id
@@ -231,7 +231,7 @@ router.post('/update/:fileId', async function(req, res, next) {
                 }, {transaction: t})
                 .then((file) => {
                     return models.filelog.create({
-                        log: 'từ ' + old_name + ' thành ' + new_name,
+                        log: 'từ ' + old_name.slice(14) + ' thành ' + new_name.slice(14),
                         file_id: file.dataValues.id,
                         action: 'renamed',
                         updated_by: user_id
@@ -281,14 +281,6 @@ router.post('/remove/trash/:fileId', async function(req, res, next) {
                 return checkFile.update({
                     active: false,
                 }, {transaction: t})
-                .then((file) => {
-                    return models.filelog.create({
-                        log: 'vào thùng rác',
-                        file_id: file.dataValues.id,
-                        action: 'deleted',
-                        updated_by: req.body.user_id
-                    }, {transaction: t})
-                })
             }).then(() => {
                 return res.status(200).json({code: 200, message: "Xóa file thành công !"})
             }).catch(err => {
@@ -311,18 +303,6 @@ router.post('/restore', async function(req, res, next) {
                 { active: true },
                 { where: {id: fileIds} }, 
                 {transaction: t})
-                .then(() => {
-                    let filelog = []
-                    for (let fileId of fileIds) {
-                        filelog.push({
-                            log: 'từ thùng rác', 
-                            file_id: fileId, 
-                            action: 'restored', 
-                            updated_by: req.body.user_id
-                        })
-                    }
-                    return models.filelog.bulkCreate(filelog, {transaction: t})
-                })
         }).then(() => {
             return res.status(200).json({code: 200, message: "Khôi phục thành công !"})
         }).catch(err => {
@@ -349,7 +329,7 @@ router.post('/move/:fileId', async function(req, res, next) {
                 }, {transaction: t})
                     .then(() => {
                         return models.filelog.create({
-                            log: 'từ Kho của tôi tới ' + newFolderName.dataValues.name,
+                            log: 'từ Kho của tôi tới ' + newFolderName.dataValues.name.slice(14),
                             file_id: fileId,
                             action: 'moved',
                             updated_by: req.body.user_id
@@ -368,7 +348,7 @@ router.post('/move/:fileId', async function(req, res, next) {
                     {transaction: t})
                     .then(() => {
                         return models.filelog.create({
-                            log: 'từ ' + oldFolderName.dataValues.name + ' tới ' + newFolderName.dataValues.name,
+                            log: 'từ ' + oldFolderName.dataValues.name.slice(14) + ' tới ' + newFolderName.dataValues.name.slice(14),
                             file_id: fileId,
                             action: 'moved',
                             updated_by: req.body.user_id
