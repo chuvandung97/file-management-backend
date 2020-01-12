@@ -45,7 +45,7 @@ router.post('/upload', upload.single("file"), function(req, res) {
                     storage_id: storage.dataValues.id,
                     created_by: req.query.created_by,
                     filelogs: [{
-                        log: 'trong ' + (folderName ? folderName.dataValues.name : 'Kho của tôi'),
+                        log: 'trong ' + (folderName ? folderName.dataValues.name.slice(14) : 'Kho của tôi'),
                         action: 'created',
                         updated_by: req.query.updated_by
                     }]
@@ -318,9 +318,10 @@ router.post('/move/:fileId', async function(req, res, next) {
     try {
         let fileId = req.params.fileId
         let oldFolderId = req.body.oldFolderId ? req.body.oldFolderId : null
-        let newFolderId = req.body.newFolderId
+        let newFolderId = req.body.newFolderId ? req.body.newFolderId : null
         let oldFolderName = await models.folder.findOne({ where: { id: oldFolderId } })
         let newFolderName = await models.folder.findOne({ where: { id: newFolderId } })
+        let name = newFolderName ? newFolderName.dataValues.name.slice(14): 'Kho của tôi'
         if(oldFolderId === null) {
             models.sequelize.transaction(t => {
                 return models.folderfile.create({
@@ -348,7 +349,7 @@ router.post('/move/:fileId', async function(req, res, next) {
                     {transaction: t})
                     .then(() => {
                         return models.filelog.create({
-                            log: 'từ ' + oldFolderName.dataValues.name.slice(14) + ' tới ' + newFolderName.dataValues.name.slice(14),
+                            log: 'từ ' + oldFolderName.dataValues.name.slice(14) + ' tới ' + name,
                             file_id: fileId,
                             action: 'moved',
                             updated_by: req.body.user_id

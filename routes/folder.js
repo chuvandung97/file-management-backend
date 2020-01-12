@@ -219,8 +219,9 @@ router.post('/restore', async function(req, res, next) {
 router.post('/move/:folderId', async function(req, res, next) {
     try {
         let oldFolderId = req.params.folderId
-        let newFolderId = req.body.folderId
+        let newFolderId = req.body.folderId ? req.body.folderId : null
         let newFolderName = await models.folder.findOne({ where: { id: newFolderId } })
+        let name = newFolderName ? newFolderName.dataValues.name.slice(14): 'Kho của tôi'
         models.sequelize.transaction(t => {
             return models.folder.update(
                 { parent_id: newFolderId },
@@ -228,7 +229,7 @@ router.post('/move/:folderId', async function(req, res, next) {
                 {transaction: t})
                 .then(() => {
                     return models.folderlog.create({
-                        log: 'tới ' + newFolderName.dataValues.name.slice(14),
+                        log: 'tới ' + name,
                         folder_id: oldFolderId,
                         action: 'moved',
                         updated_by: req.body.user_id
